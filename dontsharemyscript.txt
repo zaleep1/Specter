@@ -1,0 +1,53 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+
+local ghost = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
+
+local trackedPart = ghost.PrimaryPart or ghost:FindFirstChildWhichIsA("BasePart")
+if not trackedPart then
+    warn("No part to track for ghost")
+    return
+end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GhostSpeedGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0, 300, 0, 50)
+speedLabel.Position = UDim2.new(0, 20, 0, 20)
+speedLabel.BackgroundTransparency = 0.3
+speedLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedLabel.TextScaled = true
+speedLabel.Font = Enum.Font.SourceSansBold
+speedLabel.Text = "Ghost Speed: 0"
+speedLabel.Parent = screenGui
+
+local function createESP(part)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "GhostESP"
+    billboard.Adornee = part
+    billboard.Size = UDim2.new(0, 150, 0, 40)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = part
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = Color3.fromRGB(255, 0, 0)
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+    label.Text = "Ghost 👻"
+    label.Parent = billboard
+end
+
+createESP(trackedPart)
+
+RunService.RenderStepped:Connect(function()
+    local speed = ghost:GetAttribute("Speed") or 0
+    speedLabel.Text = "Ghost Speed: " .. string.format("%.1f", speed)
+end)
