@@ -5,6 +5,19 @@ local player = Players.LocalPlayer
 
 local ghost = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
 
+local evidence_folder = workspace.Dynamic.Evidence
+local fingerprints = evidence_folder.Fingerprints
+local dropped_equipment = workspace.Equipment
+local motions = evidence_folder.MotionGrids
+local orbs = evidence_folder.Orbs
+local emfs = evidence_folder.EMF
+
+local found_emf = false
+local found_fingerprint = false
+local found_orb = false
+local got_motion = false
+local no_motion = false
+
 local trackedPart = ghost.PrimaryPart or ghost:FindFirstChildWhichIsA("BasePart")
 if not trackedPart then
     warn("No part to track for ghost")
@@ -53,6 +66,52 @@ speedLabel.TextScaled = true
 speedLabel.Font = Enum.Font.SourceSansBold
 speedLabel.Text = "Ghost Speed: 0"
 speedLabel.Parent = screenGui
+
+emfs.ChildAdded:Connect(function(emf)
+    if emf:IsA("Part") then
+        if emf.Name == "EMF5" and not found_emf then
+            print("EMF 5: Yes")
+            found_emf = true
+        end
+        print("Last EMF: " .. emf.Name)
+    end
+end)
+
+fingerprints.ChildAdded:Connect(function(fingerprint)
+    if fingerprint:IsA("Part") and not found_fingerprint then
+        print("Fingerprints: Yes")
+        found_fingerprint = true
+    end
+end)
+
+orbs.ChildAdded:Connect(function(orb)
+    if orb:IsA("Part") and not found_orb then
+        print("Orbs: Yes")
+        found_orb = true
+    end
+end)
+
+local run_service = game:GetService("RunService")
+
+local motionconnection
+motionconnection = run_service.RenderStepped:Connect(function()
+    for _, motion in pairs(motions:GetDescendants()) do
+        if motion:IsA("Part") then
+            if motion.Color == Color3.fromRGB(252, 52, 52) then
+                print("Motion: Yes")
+                got_motion = true
+                motionconnection:Disconnect()
+                break
+            elseif motion.BrickColor == BrickColor.new("Toothpaste") then
+                print("Motion: No")
+                no_motion = true
+                motionconnection:Disconnect()
+                break
+            end
+        end
+    end
+end)
+
 
 local function createESP(part)
     local billboard = Instance.new("BillboardGui")
@@ -103,3 +162,4 @@ RunService.RenderStepped:Connect(function()
     speedLabel.Text = "Ghost Speed: " .. string.format("%.1f", speed)
 
 end)
+
