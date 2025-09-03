@@ -1,6 +1,6 @@
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-
+local map = workspace:FindFirstChild("Map")
 local player = Players.LocalPlayer
 
 local ghost = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
@@ -10,6 +10,33 @@ if not trackedPart then
     warn("No part to track for ghost")
     return
 end
+
+if not map then
+    warn("No se encontró Map")
+    return
+end
+
+local bone = map:FindFirstChild("Bone")
+if not bone then
+    warn("No se encontró Bone")
+    return
+end
+
+local billboard = Instance.new("BillboardGui")
+billboard.Name = "BoneESP"
+billboard.Adornee = bone 
+billboard.AlwaysOnTop = true
+billboard.Size = UDim2.new(0, 100, 0, 50)
+billboard.StudsOffset = Vector3.new(0, 2, 0)
+billboard.Parent = player:WaitForChild("PlayerGui")
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(1, 0, 1, 0)
+label.BackgroundTransparency = 1
+label.Text = "Bone"
+label.TextColor3 = Color3.fromRGB(255, 0, 0)
+label.TextScaled = true
+label.Parent = billboard
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "GhostSpeedGUI"
@@ -45,9 +72,34 @@ local function createESP(part)
     label.Parent = billboard
 end
 
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BoneTPGui"
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 120, 0, 40)
+button.Position = UDim2.new(0, 20, 0.5, -20) -- izquierda pantalla
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Text = "TP to Bone"
+button.Parent = screenGui
+
+button.MouseButton1Click:Connect(function()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+
+    if hrp and bone then
+        hrp.CFrame = bone.CFrame + Vector3.new(0, 5, 0) 
+        print("Teletransportado al Bone")
+    else
+        warn("No se pudo teletransportar")
+    end
+end)
+
 createESP(trackedPart)
 
 RunService.RenderStepped:Connect(function()
     local speed = ghost:GetAttribute("Speed") or 0
     speedLabel.Text = "Ghost Speed: " .. string.format("%.1f", speed)
+
 end)
