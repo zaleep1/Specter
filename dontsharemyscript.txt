@@ -7,7 +7,6 @@ local ghost = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
 
 local evidence_folder = workspace.Dynamic.Evidence
 local fingerprints = evidence_folder.Fingerprints
-local dropped_equipment = workspace.Equipment
 local motions = evidence_folder.MotionGrids
 local orbs = evidence_folder.Orbs
 local emfs = evidence_folder.EMF
@@ -19,6 +18,8 @@ local got_motion = false
 local no_motion = false
 
 local trackedPart = ghost.PrimaryPart or ghost:FindFirstChildWhichIsA("BasePart")
+
+
 if not trackedPart then
     warn("No part to track for ghost")
     return
@@ -162,4 +163,5 @@ RunService.RenderStepped:Connect(function()
     speedLabel.Text = "Ghost Speed: " .. string.format("%.1f", speed)
 
 end)
+
 
