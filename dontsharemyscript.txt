@@ -1,8 +1,7 @@
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local map = workspace:FindFirstChild("Map")
 local player = Players.LocalPlayer
-
+local map = workspace:FindFirstChild("Map")
 local ghost = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
 
 local evidence_folder = workspace.Dynamic.Evidence
@@ -11,31 +10,234 @@ local motions = evidence_folder.MotionGrids
 local orbs = evidence_folder.Orbs
 local emfs = evidence_folder.EMF
 
-local found_emf = false
-local found_fingerprint = false
-local found_orb = false
-local got_motion = false
-local no_motion = false
-
 local trackedPart = ghost.PrimaryPart or ghost:FindFirstChildWhichIsA("BasePart")
+local bone = map and map:FindFirstChild("Bone")
 
-
-if not trackedPart then
-    warn("No part to track for ghost")
-    return
+-- Estados
+local function setStatus(label, value)
+    label.Text = label.Text:split(":")[1] .. ": " .. value
+    if value == "Yes" then
+        label.TextColor3 = Color3.fromRGB(0, 255, 0) -- verde neón
+    elseif value == "No" then
+        label.TextColor3 = Color3.fromRGB(255, 0, 0) -- rojo neón
+    elseif value == "Not yet" then
+        label.TextColor3 = Color3.fromRGB(255, 255, 0) -- amarillo neón
+    else
+        label.TextColor3 = Color3.fromRGB(255, 255, 255) -- blanco por default
+    end
 end
 
-if not map then
-    warn("No se encontró Map")
-    return
+local found_emf = "Not yet"
+local found_fingerprint = "Not yet"
+local found_orb = "Not yet"
+local motion_state = "Not yet"
+
+-- UI principal (rectangular con bordes redondeados)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GhostInfoUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 280, 0, 370)
+mainFrame.Position = UDim2.new(0, 20, 0.25, 0) -- lado izquierdo
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BackgroundTransparency = 0.1
+mainFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 20) -- esquinas redondeadas
+frameCorner.Parent = mainFrame
+
+-- Botón TP circular
+local tpButton = Instance.new("TextButton")
+tpButton.Size = UDim2.new(1, -40, 0, 40)
+tpButton.Position = UDim2.new(0, 20, 0, 20)
+tpButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpButton.Text = "TP to Bone"
+tpButton.Font = Enum.Font.GothamBold
+tpButton.TextScaled = true
+tpButton.Parent = mainFrame
+
+local tpCorner = Instance.new("UICorner")
+tpCorner.CornerRadius = UDim.new(0, 20)
+tpCorner.Parent = tpButton
+
+tpButton.MouseButton1Click:Connect(function()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+
+    if hrp and bone then
+        hrp.CFrame = bone.CFrame + Vector3.new(0, 5, 0)
+    end
+end)
+
+-- BOTÓN: TP Motion Sensor To Ghost
+local tpMotionButton = Instance.new("TextButton")
+tpMotionButton.Size = UDim2.new(1, -40, 0, 40)
+tpMotionButton.Position = UDim2.new(0, 20, 0, 70)
+tpMotionButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- gris
+tpMotionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpMotionButton.Text = "TP MS to Ghost"
+tpMotionButton.Font = Enum.Font.GothamBold
+tpMotionButton.TextScaled = true
+tpMotionButton.Parent = mainFrame
+
+local tpMotionCorner = Instance.new("UICorner")
+tpMotionCorner.CornerRadius = UDim.new(0, 20)
+tpMotionCorner.Parent = tpMotionButton
+
+tpMotionButton.MouseButton1Click:Connect(function()
+    local motion_grid = evidence_folder.MotionGrids:FindFirstChild("SensorGrid")
+
+    if motion_grid then
+        local last_pos = {}
+        local ghostModel = workspace.NPCs:FindFirstChildOfClass("Model")
+
+        if ghostModel and ghostModel:FindFirstChild("HumanoidRootPart") then
+            for _, grid in pairs(motion_grid:GetChildren()) do
+                if grid:IsA("Part") then
+                    last_pos[grid] = grid.CFrame
+                    grid.CFrame = ghostModel.HumanoidRootPart.CFrame + Vector3.new(1, 0, 0)
+                end
+            end
+
+            task.wait()
+
+            for part, pos in pairs(last_pos) do
+                part.CFrame = pos
+            end
+        end
+    else
+        warn("⚠️ Motion Grids not found, place one before using this feature!")
+    end
+end)
+
+-- BOTÓN: TP to Van
+local tpVanButton = Instance.new("TextButton")
+tpVanButton.Size = UDim2.new(1, -40, 0, 40)
+tpVanButton.Position = UDim2.new(0, 20, 0, 120)
+tpVanButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- gris
+tpVanButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpVanButton.Text = "TP to Van"
+tpVanButton.Font = Enum.Font.GothamBold
+tpVanButton.TextScaled = true
+tpVanButton.Parent = mainFrame
+
+local tpVanCorner = Instance.new("UICorner")
+tpVanCorner.CornerRadius = UDim.new(0, 20)
+tpVanCorner.Parent = tpVanButton
+
+tpVanButton.MouseButton1Click:Connect(function()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    local van = workspace:FindFirstChild("Van")
+
+    if hrp and van and van.PrimaryPart then
+        hrp.CFrame = van.PrimaryPart.CFrame + Vector3.new(0, 5, 0)
+    else
+        warn("⚠️ Van not found!")
+    end
+end)
+
+
+-- Función para añadir texto en la lista
+local function makeLabel(text, yPos)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -40, 0, 30)
+    lbl.Position = UDim2.new(0, 20, 0, yPos)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextScaled = true
+    lbl.Font = Enum.Font.GothamBold
+    lbl.Text = text
+    lbl.Parent = mainFrame
+    return lbl
 end
 
-local bone = map:FindFirstChild("Bone")
-if not bone then
-    warn("No se encontró Bone")
-    return
-end
+-- Labels de evidencia
+local emfLabel = makeLabel("EMF: "..found_emf, 170)
+local motionLabel = makeLabel("Motion: "..motion_state, 210)
+local orbLabel = makeLabel("Orbs: "..found_orb, 250)
+local fingerprintLabel = makeLabel("Fingerprints: "..found_fingerprint, 290)
+local speedLabel = makeLabel("Ghost Speed: 0", 330)
 
+
+-- Conexiones de evidencia
+emfs.ChildAdded:Connect(function(emf)
+    if found_emf ~= "Not yet" then return end
+    if emf:IsA("Part") and emf.Name == "EMF5" then
+        found_emf = "Yes"
+        setStatus(emfLabel, found_emf)
+    end
+end)
+
+task.delay(120, function()
+    if found_emf == "Not yet" then
+        found_emf = "No"
+        setStatus(emfLabel, found_emf)
+    end
+end)
+
+
+fingerprints.ChildAdded:Connect(function(fingerprint)
+    if fingerprint:IsA("Part") then
+        found_fingerprint = "Yes"
+        setStatus(fingerprintLabel, found_fingerprint)
+    end
+end)
+
+task.delay(120, function()
+    if found_fingerprint == "Not yet" then
+        found_fingerprint = "No"
+        setStatus(fingerprintLabel, found_fingerprint)
+    end
+end)
+
+orbs.ChildAdded:Connect(function(orb)
+    if orb:IsA("Part") then
+        found_orb = "Yes"
+        setStatus(orbLabel, found_orb)
+    end
+end)
+
+task.delay(120, function()
+    if found_orb == "Not yet" then
+        found_orb = "No"
+        setStatus(orbLabel, found_orb)
+    end
+end)
+
+
+-- Motion check
+local motionconnection
+motionconnection = RunService.RenderStepped:Connect(function()
+    for _, motion in pairs(motions:GetDescendants()) do
+        if motion:IsA("Part") then
+            if motion.Color == Color3.fromRGB(252, 52, 52) then
+                motion_state = "Yes"
+                setStatus(motionLabel, motion_state)
+                motionconnection:Disconnect()
+                break
+            elseif motion.BrickColor == BrickColor.new("Toothpaste") then
+                motion_state = "No"
+                setStatus(motionLabel, motion_state)
+                motionconnection:Disconnect()
+                break
+            end
+        end
+    end
+end)
+
+-- Velocidad del ghost
+RunService.RenderStepped:Connect(function()
+    local speed = ghost:GetAttribute("Speed") or 0
+    speedLabel.Text = "Ghost Speed: " .. string.format("%.1f", speed)
+end)
+
+-- ESP
 local billboard = Instance.new("BillboardGui")
 billboard.Name = "BoneESP"
 billboard.Adornee = bone 
@@ -51,68 +253,6 @@ label.Text = "Bone"
 label.TextColor3 = Color3.fromRGB(255, 0, 0)
 label.TextScaled = true
 label.Parent = billboard
-
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "GhostSpeedGUI"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
-
-local speedLabel = Instance.new("TextLabel")
-speedLabel.Size = UDim2.new(0, 300, 0, 50)
-speedLabel.Position = UDim2.new(0, 20, 0, 20)
-speedLabel.BackgroundTransparency = 0.3
-speedLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedLabel.TextScaled = true
-speedLabel.Font = Enum.Font.SourceSansBold
-speedLabel.Text = "Ghost Speed: 0"
-speedLabel.Parent = screenGui
-
-emfs.ChildAdded:Connect(function(emf)
-    if emf:IsA("Part") then
-        if emf.Name == "EMF5" and not found_emf then
-            print("EMF 5: Yes")
-            found_emf = true
-        end
-        print("Last EMF: " .. emf.Name)
-    end
-end)
-
-fingerprints.ChildAdded:Connect(function(fingerprint)
-    if fingerprint:IsA("Part") and not found_fingerprint then
-        print("Fingerprints: Yes")
-        found_fingerprint = true
-    end
-end)
-
-orbs.ChildAdded:Connect(function(orb)
-    if orb:IsA("Part") and not found_orb then
-        print("Orbs: Yes")
-        found_orb = true
-    end
-end)
-
-local run_service = game:GetService("RunService")
-
-local motionconnection
-motionconnection = run_service.RenderStepped:Connect(function()
-    for _, motion in pairs(motions:GetDescendants()) do
-        if motion:IsA("Part") then
-            if motion.Color == Color3.fromRGB(252, 52, 52) then
-                print("Motion: Yes")
-                got_motion = true
-                motionconnection:Disconnect()
-                break
-            elseif motion.BrickColor == BrickColor.new("Toothpaste") then
-                print("Motion: No")
-                no_motion = true
-                motionconnection:Disconnect()
-                break
-            end
-        end
-    end
-end)
-
 
 local function createESP(part)
     local billboard = Instance.new("BillboardGui")
@@ -132,36 +272,9 @@ local function createESP(part)
     label.Parent = billboard
 end
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "BoneTPGui"
-screenGui.Parent = player:WaitForChild("PlayerGui")
+if trackedPart then
+    createESP(trackedPart)
+end
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 120, 0, 40)
-button.Position = UDim2.new(0, 20, 0.5, -20) -- izquierda pantalla
-button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.Text = "TP to Bone"
-button.Parent = screenGui
-
-button.MouseButton1Click:Connect(function()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-
-    if hrp and bone then
-        hrp.CFrame = bone.CFrame + Vector3.new(0, 5, 0) 
-        print("Teletransportado al Bone")
-    else
-        warn("No se pudo teletransportar")
-    end
-end)
-
-createESP(trackedPart)
-
-RunService.RenderStepped:Connect(function()
-    local speed = ghost:GetAttribute("Speed") or 0
-    speedLabel.Text = "Ghost Speed: " .. string.format("%.1f", speed)
-
-end)
 
 
