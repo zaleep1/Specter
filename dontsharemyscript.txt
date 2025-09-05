@@ -1,6 +1,7 @@
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
+local local_player = Players.LocalPlayer
 local map = workspace:FindFirstChild("Map")
 local ghost = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
 
@@ -13,88 +14,143 @@ local emfs = evidence_folder.EMF
 local trackedPart = ghost.PrimaryPart or ghost:FindFirstChildWhichIsA("BasePart")
 local bone = map and map:FindFirstChild("Bone")
 
--- Estados
-local function setStatus(label, value)
-    label.Text = label.Text:split(":")[1] .. ": " .. value
-    if value == "Yes" then
+-- Función para setear estado (solo colores y texto corto)
+local function setStatus(label, state)
+    if state == "Yes" then
         label.TextColor3 = Color3.fromRGB(0, 255, 0) -- verde neón
-    elseif value == "No" then
+    elseif state == "No" then
         label.TextColor3 = Color3.fromRGB(255, 0, 0) -- rojo neón
-    elseif value == "Not yet" then
-        label.TextColor3 = Color3.fromRGB(255, 255, 0) -- amarillo neón
     else
-        label.TextColor3 = Color3.fromRGB(255, 255, 255) -- blanco por default
+        label.TextColor3 = Color3.fromRGB(255, 255, 255) -- blanco neón
     end
 end
 
-local found_emf = "Not yet"
-local found_fingerprint = "Not yet"
-local found_orb = "Not yet"
-local motion_state = "Not yet"
-
--- UI principal (rectangular con bordes redondeados)
+-- UI principal
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "GhostInfoUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = player:WaitForChild("PlayerGui")
 
+-- Frame principal más angosto
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 280, 0, 370)
+mainFrame.Size = UDim2.new(0, 220, 0, 420) -- ancho reducido
 mainFrame.Position = UDim2.new(0, 20, 0.25, 0) -- lado izquierdo
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-mainFrame.BackgroundTransparency = 0.1
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BackgroundTransparency = 0
 mainFrame.Parent = screenGui
 
 local frameCorner = Instance.new("UICorner")
-frameCorner.CornerRadius = UDim.new(0, 20) -- esquinas redondeadas
+frameCorner.CornerRadius = UDim.new(0, 15)
 frameCorner.Parent = mainFrame
 
--- Botón TP circular
-local tpButton = Instance.new("TextButton")
-tpButton.Size = UDim2.new(1, -40, 0, 40)
-tpButton.Position = UDim2.new(0, 20, 0, 20)
-tpButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-tpButton.Text = "TP to Bone"
-tpButton.Font = Enum.Font.GothamBold
-tpButton.TextScaled = true
-tpButton.Parent = mainFrame
+-- sombra
+local shadow = Instance.new("ImageLabel")
+shadow.Size = UDim2.new(1, 30, 1, 30)
+shadow.Position = UDim2.new(0, -15, 0, -15)
+shadow.BackgroundTransparency = 1
+shadow.Image = "rbxassetid://1316045217"
+shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+shadow.ImageTransparency = 0.5
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+shadow.Parent = mainFrame
 
-local tpCorner = Instance.new("UICorner")
-tpCorner.CornerRadius = UDim.new(0, 20)
-tpCorner.Parent = tpButton
+-- Función para crear botones
+local function makeButton(text, yPos)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -40, 0, 40)
+    btn.Position = UDim2.new(0, 20, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Text = text
+    btn.Font = Enum.Font.GothamBold
+    btn.TextScaled = true
+    btn.Parent = mainFrame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 20)
+    corner.Parent = btn
+
+    return btn
+end
+
+local player = game.Players.LocalPlayer
+local tpButton = makeButton("Collect Bone", 20)
+
+local function getPositionFromInstance(inst)
+    if not inst then return nil end
+    if inst:IsA("BasePart") then
+        return inst.Position
+    end
+    if inst.PrimaryPart and inst.PrimaryPart:IsA("BasePart") then
+        return inst.PrimaryPart.Position
+    end
+    local p = inst:FindFirstChildWhichIsA("BasePart")
+    if p then
+        return p.Position
+    end
+    return nil
+end
 
 tpButton.MouseButton1Click:Connect(function()
+    if not bone then
+        print("Bone not found")
+        return
+    end
+
     local character = player.Character or player.CharacterAdded:Wait()
     local hrp = character:FindFirstChild("HumanoidRootPart")
-
-    if hrp and bone then
-        hrp.CFrame = bone.CFrame + Vector3.new(0, 5, 0)
+    if not hrp then
+        warn("HumanoidRootPart no encontrado")
+        return
     end
+
+    local bonePos = getPositionFromInstance(bone)
+    if not bonePos then
+        warn("No se pudo obtener la posición del bone")
+        return
+    end
+
+    -- Guardar posición original
+    local last_pos = hrp.CFrame
+
+    -- Teleport un poco arriba del bone
+    hrp.CFrame = CFrame.new(bonePos + Vector3.new(0, 5, 0))
+    task.wait(0.2)
+
+    -- 🔥 Forzar la cámara del jugador a mirar al bone
+    local cam = workspace.CurrentCamera
+    if cam then
+        cam.CFrame = CFrame.new(cam.CFrame.Position, bonePos)
+    end
+
+    task.wait(0.2)
+
+    -- Buscar y activar el ProximityPrompt
+    local bone_prompt = bone:FindFirstChildOfClass("ProximityPrompt")
+    if bone_prompt then
+        pcall(function()
+            fireproximityprompt(bone_prompt, 1)
+        end)
+    else
+        print("No se encontró el ProximityPrompt")
+    end
+
+    task.wait(0.3)
+
+    -- Volver a la posición original
+    hrp.CFrame = last_pos
 end)
 
--- BOTÓN: TP Motion Sensor To Ghost
-local tpMotionButton = Instance.new("TextButton")
-tpMotionButton.Size = UDim2.new(1, -40, 0, 40)
-tpMotionButton.Position = UDim2.new(0, 20, 0, 70)
-tpMotionButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- gris
-tpMotionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-tpMotionButton.Text = "TP MS to Ghost"
-tpMotionButton.Font = Enum.Font.GothamBold
-tpMotionButton.TextScaled = true
-tpMotionButton.Parent = mainFrame
-
-local tpMotionCorner = Instance.new("UICorner")
-tpMotionCorner.CornerRadius = UDim.new(0, 20)
-tpMotionCorner.Parent = tpMotionButton
+local tpMotionButton = makeButton("Check PM", 70)
+local tpVanButton = makeButton("TP to Van", 120)
+local staminaButton = makeButton("Inf stamina: OFF", 170)
 
 tpMotionButton.MouseButton1Click:Connect(function()
     local motion_grid = evidence_folder.MotionGrids:FindFirstChild("SensorGrid")
-
     if motion_grid then
         local last_pos = {}
         local ghostModel = workspace.NPCs:FindFirstChildOfClass("Model")
-
         if ghostModel and ghostModel:FindFirstChild("HumanoidRootPart") then
             for _, grid in pairs(motion_grid:GetChildren()) do
                 if grid:IsA("Part") then
@@ -102,136 +158,98 @@ tpMotionButton.MouseButton1Click:Connect(function()
                     grid.CFrame = ghostModel.HumanoidRootPart.CFrame + Vector3.new(1, 0, 0)
                 end
             end
-
             task.wait()
-
             for part, pos in pairs(last_pos) do
                 part.CFrame = pos
             end
         end
     else
-        warn("⚠️ Motion Grids not found, place one before using this feature!")
+        warn("⚠️ Motion Grids not found!")
     end
 end)
-
--- BOTÓN: TP to Van
-local tpVanButton = Instance.new("TextButton")
-tpVanButton.Size = UDim2.new(1, -40, 0, 40)
-tpVanButton.Position = UDim2.new(0, 20, 0, 120)
-tpVanButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100) -- gris
-tpVanButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-tpVanButton.Text = "TP to Van"
-tpVanButton.Font = Enum.Font.GothamBold
-tpVanButton.TextScaled = true
-tpVanButton.Parent = mainFrame
-
-local tpVanCorner = Instance.new("UICorner")
-tpVanCorner.CornerRadius = UDim.new(0, 20)
-tpVanCorner.Parent = tpVanButton
 
 tpVanButton.MouseButton1Click:Connect(function()
     local character = player.Character or player.CharacterAdded:Wait()
     local hrp = character:FindFirstChild("HumanoidRootPart")
     local van = workspace:FindFirstChild("Van")
-
     if hrp and van and van.PrimaryPart then
         hrp.CFrame = van.PrimaryPart.CFrame + Vector3.new(0, 5, 0)
     else
         warn("⚠️ Van not found!")
     end
 end)
-
-
--- Función para añadir texto en la lista
+-- Función para añadir labels de evidencias
 local function makeLabel(text, yPos)
     local lbl = Instance.new("TextLabel")
     lbl.Size = UDim2.new(1, -40, 0, 30)
     lbl.Position = UDim2.new(0, 20, 0, yPos)
     lbl.BackgroundTransparency = 1
     lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextXAlignment = Enum.TextXAlignment.Center -- CENTRADO
     lbl.TextScaled = true
     lbl.Font = Enum.Font.GothamBold
-    lbl.Text = text
+    lbl.Text = text -- solo el nombre, sin estado inicial
     lbl.Parent = mainFrame
     return lbl
 end
 
--- Labels de evidencia
-local emfLabel = makeLabel("EMF: "..found_emf, 170)
-local motionLabel = makeLabel("Motion: "..motion_state, 210)
-local orbLabel = makeLabel("Orbs: "..found_orb, 250)
-local fingerprintLabel = makeLabel("Fingerprints: "..found_fingerprint, 290)
-local speedLabel = makeLabel("Ghost Speed: 0", 330)
+-- Labels
+local emfLabel = makeLabel("EMF", 220)
+local motionLabel = makeLabel("Motion", 260)
+local orbLabel = makeLabel("Orbs", 300)
+local fingerprintLabel = makeLabel("Fingerprints", 340)
+local speedLabel = makeLabel("Ghost Speed: 0", 380)
 
-
--- Conexiones de evidencia
+-- Evidencias
 emfs.ChildAdded:Connect(function(emf)
-    if found_emf ~= "Not yet" then return end
     if emf:IsA("Part") and emf.Name == "EMF5" then
-        found_emf = "Yes"
-        setStatus(emfLabel, found_emf)
+        setStatus(emfLabel, "Yes")
     end
 end)
 
 task.delay(120, function()
-    if found_emf == "Not yet" then
-        found_emf = "No"
-        setStatus(emfLabel, found_emf)
+    if emfLabel.TextColor3 == Color3.fromRGB(255, 255, 255) then
+        setStatus(emfLabel, "No")
     end
 end)
-
 
 fingerprints.ChildAdded:Connect(function(fingerprint)
     if fingerprint:IsA("Part") then
-        found_fingerprint = "Yes"
-        setStatus(fingerprintLabel, found_fingerprint)
+        setStatus(fingerprintLabel, "Yes")
     end
 end)
 
 task.delay(120, function()
-    if found_fingerprint == "Not yet" then
-        found_fingerprint = "No"
-        setStatus(fingerprintLabel, found_fingerprint)
+    if fingerprintLabel.TextColor3 == Color3.fromRGB(255, 255, 255) then
+        setStatus(fingerprintLabel, "No")
     end
 end)
 
 orbs.ChildAdded:Connect(function(orb)
     if orb:IsA("Part") then
-        found_orb = "Yes"
-        setStatus(orbLabel, found_orb)
+        setStatus(orbLabel, "Yes")
     end
 end)
 
 task.delay(120, function()
-    if found_orb == "Not yet" then
-        found_orb = "No"
-        setStatus(orbLabel, found_orb)
+    if orbLabel.TextColor3 == Color3.fromRGB(255, 255, 255) then
+        setStatus(orbLabel, "No")
     end
 end)
 
-
--- Motion check
-local motionconnection
-motionconnection = RunService.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     for _, motion in pairs(motions:GetDescendants()) do
         if motion:IsA("Part") then
             if motion.Color == Color3.fromRGB(252, 52, 52) then
-                motion_state = "Yes"
-                setStatus(motionLabel, motion_state)
-                motionconnection:Disconnect()
-                break
+                setStatus(motionLabel, "Yes")
             elseif motion.BrickColor == BrickColor.new("Toothpaste") then
-                motion_state = "No"
-                setStatus(motionLabel, motion_state)
-                motionconnection:Disconnect()
-                break
+                setStatus(motionLabel, "No")
             end
         end
     end
 end)
 
--- Velocidad del ghost
+-- Velocidad del ghost (queda igual que tenías)
 RunService.RenderStepped:Connect(function()
     local speed = ghost:GetAttribute("Speed") or 0
     speedLabel.Text = "Ghost Speed: " .. string.format("%.1f", speed)
@@ -275,6 +293,37 @@ end
 if trackedPart then
     createESP(trackedPart)
 end
+
+local inf_stamina = false
+local playerconnection
+
+staminaButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- rojo inicial
+
+staminaButton.MouseButton1Click:Connect(function()
+    inf_stamina = not inf_stamina
+
+    if inf_stamina then
+        staminaButton.Text = "Inf stamina: ON"
+        staminaButton.TextColor3 = Color3.fromRGB(0, 255, 0) -- verde neón
+
+        -- conectar loop
+        if not playerconnection then
+            playerconnection = RunService.RenderStepped:Connect(function()
+                local_player:SetAttribute("Stamina", 100)
+            end)
+        end
+    else
+        staminaButton.Text = "Inf stamina: OFF"
+        staminaButton.TextColor3 = Color3.fromRGB(255, 0, 0) -- rojo neón
+
+        -- desconectar loop
+        if playerconnection then
+            playerconnection:Disconnect()
+            playerconnection = nil
+        end
+    end
+end)
+
 
 
 
