@@ -75,10 +75,10 @@ local function makeButton(text, yPos)
 end
 
 local player = game.Players.LocalPlayer
-local tpButton = makeButton("Santi", 20)
-local tpMotionButton = makeButton("Santi", 70)
-local tpVanButton = makeButton("Santi", 120)
-local staminaButton = makeButton("Santi", 170)
+local tpButton = makeButton("Collect Bone", 20)
+local tpMotionButton = makeButton("Check PM", 70)
+local tpVanButton = makeButton("TP to Van", 120)
+local staminaButton = makeButton("Inf Stamina: OFF", 170)
 
 local function getPositionFromInstance(inst)
     if not inst then return nil end
@@ -323,6 +323,7 @@ staminaButton.MouseButton1Click:Connect(function()
         end
     end
 end)
+
 
 
 
