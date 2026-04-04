@@ -15,9 +15,6 @@ local emfs           = evidenceFolder.EMF
 local equipment      = workspace:WaitForChild("Equipment")
 local bone           = map and map:FindFirstChild("Bone")
 
-local KEY_ENABLED = true
-local GET_KEY_URL = "https://lootdest.org/s?SsiC5LyZ"
-local VALID_KEY   = "5G0HL1P7MXNZXWDJSA13ZAWDJAMWASD"
 
 local C = {
     bg       = Color3.fromRGB(12, 12, 14),
@@ -303,7 +300,9 @@ rejectEvidence = function(key, dot, pill)
     updateGhostLabel()
 end
 
-
+local KEY_ENABLED = true
+local GET_KEY_URL = "https://lootdest.org/s?SsiC5LyZ"
+local VALID_KEY   = "5G0HL1P7MXNZXWDJSA13ZAWDJAMWASD"
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name           = "GhostInfoUI_v8"
 screenGui.ResetOnSpawn   = false
