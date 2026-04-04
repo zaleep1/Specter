@@ -7,4 +7,1004 @@ local player = Players.LocalPlayer
 
 local map            = workspace:FindFirstChild("Map")
 local ghost          = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
-local v0=evidenceFolder.EMF;local v1=workspace:WaitForChild("Equipment");local v2=map and map:FindFirstChild("Bone") ;local v3=true;local v4="https://lootdest.org/s?SsiC5LyZ";local v5="5G0HL1P7MXNZXWDJSA13ZAWDJAMWASD";local v6={bg=Color3.fromRGB(12,38 -(11 + 15) ,208 -(26 + 168) ),surface=Color3.fromRGB(27 -5 ,900 -(284 + 594) ,26),border=Color3.fromRGB(89 -49 ,40,138 -90 ),accent=Color3.fromRGB(130,266 -(122 + 44) ,255),text=Color3.fromRGB(220,380 -160 ,230),muted=Color3.fromRGB(364 -254 ,110,106 + 24 ),yes=Color3.fromRGB(12 + 68 ,230,283 -143 ),no=Color3.fromRGB(230,135 -(30 + 35) ,80),trait=Color3.fromRGB(176 + 79 ,1447 -(1043 + 214) ,226 -166 ),btnHover=Color3.fromRGB(1247 -(323 + 889) ,93 -58 ,625 -(361 + 219) ),ghost=Color3.fromRGB(500 -(53 + 267) ,32 + 108 ,255)};local v7=413.4 -(15 + 398) ;local v8={{name="Otakata",ev={"emf","fingerprints","orbs"},speed={min=9 + 5 ,max=9.8 + 5 ,fixed=true,unique=true,hint="Always 14.4 — only ghost with this speed"}},{name="Haint",ev={"motion","orbs"},speed={min=22.5,max=24.5,fixed=true,unique=true,hint="Always ~23.4 — fastest ghost"}},{name="Blair",ev={"emf"},speed={min=13.4,max=140.2 -(116 + 10) ,fixed=true,hint="Always 13.8"}},{name="Duppy",ev={"trickster","emf","orbs"},speed={min=5.699999999999999 + 9 ,max=8.5 + 7 ,fixed=true,hint="Always 15.1"}},{name="Myling",ev={"emf","motion"},speed={min=17.5,max=18.3,fixed=true,unique=true,hint="Always ~17.9"}},{name="Wendigo",ev={"motion"},speed={min=419.7 -(118 + 287) ,max=15.5,fixed=true,hint="Always 15.1"}},{name="Yokai",ev={"trickster","motion","fingerprints"},speed={min=13.4,max=17,fixed=false,hint="Starts 13.8, can spike to 16.5+"}},{name="Afarit",ev={"motion","orbs"},speed={min=390.4 -(142 + 235) ,max=86.7 -67 ,fixed=false,hint="13.8 base → 19.3 watching player"}},{name="Aswang",ev={"emf","fingerprints"},speed={min=22 -10 ,max=13.2,fixed=false,hint="~12.4 base"}},{name="Banshee",ev={"emf","fingerprints"},speed={min=7 + 5 ,max=6.199999999999999 + 7 ,fixed=false,hint="~12.4 base"}},{name="Bhuta",ev={"book","motion"},speed={min=12,max=8.2 + 5 ,fixed=false,hint="~12.4 base"}},{name="Bogey",ev={"orbs","fingerprints","motion"},speed={min=12,max=31.2 -17 ,fixed=false,hint="12.4 base → 13.8 in hunt"}},{name="Demon",ev={"flicker","book"},speed={min=57 -45 ,max=15,fixed=false,hint="12.4, slowly +0.1/s in hunt"}},{name="Douen",ev={"trickster","motion","fingerprints","book"},speed={min=5 + 7 ,max=29.2 -16 ,fixed=false,hint="~12.4 base"}},{name="Egui",ev={"orbs","book"},speed={min=12,max=13.2,fixed=false,hint="~12.4 base"}},{name="Jinn",ev={"flicker","emf","motion","orbs"},speed={min=2 + 10 ,max=32.4 -10 ,fixed=false,hint="12.4 base → up to 22.0 in hunt"}},{name="Mare",ev={"flicker","orbs"},speed={min=10 + 2 ,max=18.3,fixed=false,hint="12.4 base → up to 17.9 in hunt"}},{name="Mimic",ev={"book","emf"},speed={min=12,max=99,fixed=false,hint="Copies another ghost speed after 2 min"}},{name="Oni",ev={"motion","book"},speed={min=9 + 3 ,max=10.2 + 3 ,fixed=false,hint="~12.4 base"}},{name="Phantom",ev={"emf","orbs"},speed={min=31 -19 ,max=13.2,fixed=false,hint="~12.4 base"}},{name="Polter",ev={"trickster","fingerprints","orbs"},speed={min=12,max=16.2 -3 ,fixed=false,hint="~12.4 base"}},{name="Preta",ev={"motion","fingerprints"},speed={min=25.4 -10 ,max=66.7 -44 ,fixed=false,unique=true,hint="15.4 / 18.0 / 22.3 by player count"}},{name="Revenant",ev={"emf","fingerprints","book"},speed={min=1013 -(938 + 63) ,max=14.3 + 4 ,fixed=false,hint="12.4 → 13.8 → 17.9 spotting player"}},{name="Shade",ev={"emf","book","orbs"},speed={min=8 + 4 ,max=1151.2 -(782 + 356) ,fixed=false,hint="~12.4 base"}},{name="Spirit",ev={"flicker","book","fingerprints"},speed={min=1887 -(157 + 1718) ,max=11.2 + 2 ,fixed=false,hint="~12.4 base"}},{name="Thaye",ev={"orbs","fingerprints"},speed={min=1031.4 -(697 + 321) ,max=46 -29 ,fixed=false,hint="13.8 base, slowly accelerates"}},{name="Upyr",ev={"emf","motion"},speed={min=12,max=23.2 -10 ,fixed=false,hint="~12.4 base"}},{name="Wisp",ev={"flicker","orbs","fingerprints","book"},speed={min=10.6,max=13.2,fixed=false,hint="~12.4 base, slows to 11 in hunt"}},{name="Wraith",ev={"motion","book","emf"},speed={min=12,max=13.2,fixed=false,hint="~12.4 base"}},{name="Yurei",ev={"book","orbs"},speed={min=4 + 8 ,max=1911.2 -(260 + 1638) ,fixed=false,hint="~12.4 base"}}};local function v9(v114) local v115=440 -(382 + 58) ;local v116;while true do if (v115==(0 -0)) then if  not v114 then return;end if v114:IsA("BasePart") then return v114.Position;end v115=1;end if (v115==(1 + 0)) then if v114.PrimaryPart then return v114.PrimaryPart.Position;end v116=v114:FindFirstChildWhichIsA("BasePart",true);v115=3 -1 ;end if (v115==(5 -3)) then if v116 then return v116.Position;end break;end end end local function v10(v117,v118,v119) v119=v119 or (1205.01 -(902 + 303)) ;return (math.abs(v117.R-v118.R )<v119) and (math.abs(v117.G-v118.G )<v119) and (math.abs(v117.B-v118.B )<v119) ;end local v11=Color3.fromRGB(552 -300 ,125 -73 ,5 + 47 );local v12=BrickColor.new("Toothpaste").Color;local function v13(v120,v121) local v122=0;local v123;while true do if (v122==0) then v123=v120.speed;if v123.fixed then return (v121>=(v123.min-v7)) and (v121<=(v123.max + v7)) ;else return v121<=(v123.max + v7) ;end break;end end end local function v14(v124) local v125=1690 -(1121 + 569) ;local v126;while true do if (v125==2) then return nil;end if (v125==0) then if (v124<(226 -(22 + 192))) then return nil;end v126={};v125=684 -(483 + 200) ;end if (v125==1) then for v492,v493 in ipairs(v8) do if v13(v493,v124) then table.insert(v126,v493);end end if ( #v126==(1464 -(1404 + 59))) then return v126[1].name,v126[2 -1 ].speed.hint;end v125=2 -0 ;end end end local function v15(v127) local v128=765 -(468 + 297) ;local v129;while true do if (v128==(562 -(334 + 228))) then v129=0;while true do if (v129==(6 -4)) then if (v127>=17) then return "🟡 ~"   .. string.format("%.1f",v127)   .. ": Myling / Mare / Revenant / Preta" ;end if ((v127>=(32.9 -18)) and (v127<=(27.3 -12))) then return "🟢 ~15.1: Duppy or Wendigo";end v129=3;end if (v129==(1 + 0)) then if (v127>=(257 -(141 + 95))) then return "🟠 >"   .. string.format("%.1f",v127)   .. ": Jinn / Preta / Mimic" ;end if (v127>=18) then return "🟡 ~"   .. string.format("%.1f",v127)   .. ": Jinn / Preta / Myling" ;end v129=2 + 0 ;end if ((7 -4)==v129) then if (v127>=15) then return "🟡 ~"   .. string.format("%.1f",v127)   .. ": Duppy / Wendigo / Preta / Afarit" ;end if ((v127>=(33 -19)) and (v127<=(4.800000000000001 + 10))) then return "🟣 ~14.4: OTAKATA (unique!)";end v129=10 -6 ;end if (v129==(0 + 0)) then if (v127<(7 + 5)) then return "";end if (v127>=22.5) then return "🔴 >"   .. string.format("%.1f",v127)   .. ": Haint" ;end v129=1 -0 ;end if (v129==(3 + 1)) then local v557=0;while true do if (v557==(163 -(92 + 71))) then if ((v127>=(7.4 + 6)) and (v127<=14)) then return "🔵 ~13.8: Blair / Afarit / Thaye / Yokai";end return "";end end end end break;end end end local v16={};local v17={};local v18=false;local v19=0;local v20,v21;local v22,v23,v24;local function v25(v130,v131,v132) if (v132=="Yes") then local v467=0 -0 ;while true do if (v467==(765 -(574 + 191))) then v130.BackgroundColor3=v6.yes;v131.Text="YES";v467=1 + 0 ;end if (v467==(2 -1)) then v131.TextColor3=v6.yes;break;end end elseif (v132=="No") then local v494=0 + 0 ;while true do if (0==v494) then v130.BackgroundColor3=v6.no;v131.Text="NO";v494=850 -(254 + 595) ;end if (v494==(127 -(55 + 71))) then v131.TextColor3=v6.no;break;end end else local v495=0;local v496;while true do if (v495==(0 -0)) then v496=0;while true do if (v496==(1790 -(573 + 1217))) then v130.BackgroundColor3=v6.muted;v131.Text="?";v496=2 -1 ;end if ((1 + 0)==v496) then v131.TextColor3=v6.muted;break;end end break;end end end end local function v26() if  not v22 then return;end if v24 then v24.Text=v15(v19);end local v133=v19>=(20 -7) ;if ( not v18 and  not v133) then local v469=0;while true do if (v469==(939 -(714 + 225))) then v22.Text="? candidates";v22.TextColor3=v6.muted;v469=1;end if (1==v469) then if v23 then v23.Text="";end return;end end end local v134,v135=v14(v19);if (v134 and  not v18) then local v470=0 -0 ;while true do local v490=0 -0 ;while true do if (v490==(0 + 0)) then if (v470==1) then if v23 then local v663=0;local v664;while true do if (v663==0) then v664=0 -0 ;while true do if (v664==(806 -(118 + 688))) then v23.Text=v135 or "" ;v23.TextColor3=v6.trait;break;end end break;end end end return;end if (v470==(48 -(25 + 23))) then v22.Text=v134;v22.TextColor3=v6.yes;v470=1 + 0 ;end break;end end end end local v136={};for v341,v342 in ipairs(v8) do local v343=1886 -(927 + 959) ;local v344;while true do if (v343==(0 -0)) then local v497=732 -(16 + 716) ;while true do if (0==v497) then v344=true;for v631 in pairs(v17) do for v640,v641 in ipairs(v342.ev) do if (v641==v631) then v344=false;break;end end if  not v344 then break;end end v497=1 -0 ;end if (v497==1) then v343=98 -(11 + 86) ;break;end end end if (v343==(2 -1)) then if v344 then for v589 in pairs(v16) do local v590=false;for v632,v633 in ipairs(v342.ev) do if (v633==v589) then v590=true;break;end end if  not v590 then v344=false;break;end end end if (v344 and (v19>=(297 -(175 + 110)))) then if  not v13(v342,v19) then v344=false;end end v343=2;end if (v343==(4 -2)) then if v344 then table.insert(v136,v342.name);end break;end end end if ( #v136==0) then local v471=0;while true do if (v471==(4 -3)) then if v23 then v23.Text="";end break;end if (v471==(1796 -(503 + 1293))) then v22.Text="No match";v22.TextColor3=v6.no;v471=1;end end elseif ( #v136==(2 -1)) then v22.Text=v136[1];v22.TextColor3=v6.yes;for v540,v541 in ipairs(v8) do if (v541.name==v136[1 + 0 ]) then if v23 then local v642=1061 -(810 + 251) ;local v643;while true do if (v642==(0 + 0)) then v643=0;while true do if (v643==(0 + 0)) then v23.Text=v541.speed.hint or "" ;v23.TextColor3=v6.trait;break;end end break;end end end break;end end elseif ( #v136==(2 + 0)) then local v558=0;local v559;while true do if (v558==(534 -(43 + 490))) then v559={};for v665,v666 in ipairs(v8) do if ((v666.name==v136[734 -(711 + 22) ]) or (v666.name==v136[7 -5 ])) then if v666.speed.hint then table.insert(v559,v666.name   .. ": "   .. v666.speed.hint );end end end v558=2;end if (v558==(861 -(240 + 619))) then if v23 then local v671=0;while true do if (v671==(0 + 0)) then v23.Text=table.concat(v559,"  |  ");v23.TextColor3=v6.trait;break;end end end break;end if (v558==(0 -0)) then v22.Text=v136[1]   .. " / "   .. v136[1 + 1 ] ;v22.TextColor3=v6.ghost;v558=1745 -(1344 + 400) ;end end else local v560=table.concat(v136," / ");if ( #v560>(463 -(255 + 150))) then v560= #v136   .. " possible" ;end v22.Text=v560;v22.TextColor3=v6.ghost;if v23 then v23.Text="";end end end function v20(v137,v138,v139) local v140=0;while true do if (v140==0) then if v16[v137] then return;end v16[v137]=true;v140=1 + 0 ;end if (v140==(2 + 0)) then v26();break;end if (v140==1) then v18=true;v25(v138,v139,"Yes");v140=8 -6 ;end end end function v21(v141,v142,v143) if v16[v141] then return;end v17[v141]=true;v25(v142,v143,"No");v26();end local v27=Instance.new("ScreenGui");v27.Name="GhostInfoUI_v8";v27.ResetOnSpawn=false;v27.ZIndexBehavior=Enum.ZIndexBehavior.Sibling;v27.Parent=player:WaitForChild("PlayerGui");local v33=Instance.new("Frame");v33.Name="KeyScreen";v33.Size=UDim2.new(1,0,3 -2 ,1739 -(404 + 1335) );v33.BackgroundColor3=Color3.fromRGB(414 -(183 + 223) ,9 -1 ,10);v33.BorderSizePixel=0 + 0 ;v33.ZIndex=10;v33.Parent=v27;local v40=Instance.new("Frame",v33);v40.Size=UDim2.new(0 + 0 ,280,337 -(10 + 327) ,140 + 60 );v40.Position=UDim2.new(338.5 -(118 + 220) , -(47 + 93),449.5 -(108 + 341) , -(45 + 55));v40.BackgroundColor3=v6.bg;v40.BorderSizePixel=0 -0 ;Instance.new("UICorner",v40).CornerRadius=UDim.new(1493 -(711 + 782) ,30 -14 );local v47=Instance.new("UIStroke",v40);v47.Color=v6.accent;v47.Thickness=470 -(270 + 199) ;v47.Transparency=0.4;local v52=Instance.new("TextLabel",v40);v52.Size=UDim2.new(1, -(8 + 16),0,1847 -(580 + 1239) );v52.Position=UDim2.new(0 -0 ,12,0 + 0 ,1 + 13 );v52.BackgroundTransparency=1 + 0 ;v52.Text="GHOST INFO — Key System";v52.TextColor3=v6.text;v52.Font=Enum.Font.GothamBold;v52.TextScaled=false;v52.TextSize=33 -20 ;v52.TextXAlignment=Enum.TextXAlignment.Center;local v65=Instance.new("TextLabel",v40);v65.Size=UDim2.new(1, -(15 + 9),0,16);v65.Position=UDim2.new(0,1179 -(645 + 522) ,0,1830 -(1010 + 780) );v65.BackgroundTransparency=1 + 0 ;v65.Text="Enter your lifetime key to continue";v65.TextColor3=v6.muted;v65.Font=Enum.Font.Gotham;v65.TextScaled=false;v65.TextSize=47 -37 ;v65.TextXAlignment=Enum.TextXAlignment.Center;local v77=Instance.new("TextBox",v40);v77.Size=UDim2.new(2 -1 , -(1860 -(1045 + 791)),0 -0 ,51 -17 );v77.Position=UDim2.new(0,12,505 -(351 + 154) ,1640 -(1281 + 293) );v77.BackgroundColor3=v6.surface;v77.BorderSizePixel=266 -(28 + 238) ;v77.Text="";v77.PlaceholderText="Paste key here...";v77.PlaceholderColor3=v6.muted;v77.TextColor3=v6.text;v77.Font=Enum.Font.Gotham;v77.TextScaled=false;v77.TextSize=24 -13 ;v77.ClearTextOnFocus=false;Instance.new("UICorner",v77).CornerRadius=UDim.new(0,1567 -(1381 + 178) );local v92=Instance.new("UIPadding",v77);v92.PaddingLeft=UDim.new(0 + 0 ,10);v92.PaddingRight=UDim.new(0 + 0 ,5 + 5 );local v95=Instance.new("UIStroke",v77);v95.Color=v6.border;v95.Thickness=3 -2 ;v95.Transparency=0.2;local v100=Instance.new("TextLabel",v40);v100.Size=UDim2.new(1 + 0 , -24,470 -(381 + 89) ,13 + 1 );v100.Position=UDim2.new(0,9 + 3 ,0 -0 ,1264 -(1074 + 82) );v100.BackgroundTransparency=1 -0 ;v100.Text="";v100.TextColor3=v6.no;v100.Font=Enum.Font.Gotham;v100.TextScaled=false;v100.TextSize=1794 -(214 + 1570) ;v100.TextXAlignment=Enum.TextXAlignment.Center;local function v111(v145,v146,v147) local v148=1455 -(990 + 465) ;local v149;while true do local v345=0 + 0 ;while true do if (v345==0) then if (v148==(0 + 0)) then v149=Instance.new("TextButton",v40);v149.Size=UDim2.new(0 + 0 ,464 -346 ,1726 -(1668 + 58) ,658 -(512 + 114) );v149.Position=UDim2.new(0,v146,0 -0 ,313 -161 );v148=3 -2 ;end if (v148==(1 + 1)) then v149.TextColor3=v6.text;v149.Font=Enum.Font.GothamBold;v149.TextScaled=false;v148=3;end v345=1;end if (v345==(1 + 1)) then if (v148==(1 + 0)) then local v571=0 -0 ;while true do if (v571==0) then v149.BackgroundColor3=v147;v149.BorderSizePixel=0;v571=1995 -(109 + 1885) ;end if (v571==(1470 -(1269 + 200))) then v149.Text=v145;v148=2;break;end end end break;end if (v345==(1 -0)) then if (v148==(818 -(98 + 717))) then v149.TextSize=837 -(802 + 24) ;v149.AutoButtonColor=false;Instance.new("UICorner",v149).CornerRadius=UDim.new(0,13 -5 );v148=4 -0 ;end if (v148==(1 + 3)) then local v575=0 + 0 ;while true do if (v575==1) then return v149;end if (v575==(0 + 0)) then v149.MouseEnter:Connect(function() TweenService:Create(v149,TweenInfo.new(0.12 + 0 ),{BackgroundColor3=v147:Lerp(Color3.new(2 -1 ,3 -2 ,1),0.12)}):Play();end);v149.MouseLeave:Connect(function() TweenService:Create(v149,TweenInfo.new(0.12 + 0 ),{BackgroundColor3=v147}):Play();end);v575=1 + 0 ;end end end v345=2 + 0 ;end end end end local v112=v111("Get Lifetime Key",12,Color3.fromRGB(37 + 13 ,19 + 21 ,1523 -(797 + 636) ));local v113=v111("Check Key",689 -547 ,Color3.fromRGB(1659 -(1427 + 192) ,80,18 + 32 ));v112.MouseButton1Click:Connect(function() setclipboard(v4);local v150=v112.Text;v112.Text="Copied to clipboard!";v112.TextColor3=v6.yes;task.delay(4 -2 ,function() local v346=0 + 0 ;local v347;while true do if (v346==(0 + 0)) then v347=326 -(192 + 134) ;while true do if ((1276 -(316 + 960))==v347) then v112.Text=v150;v112.TextColor3=v6.text;break;end end break;end end end);end);v113.MouseButton1Click:Connect(function() local v154=0;local v155;while true do if (v154==(0 + 0)) then v155=v77.Text:gsub("%s+","");if (v155==v5) then local v542=0 + 0 ;while true do if (v542==(2 + 0)) then launchMainUI();break;end if (v542==1) then for v650,v651 in ipairs(v33:GetDescendants()) do if v651:IsA("GuiObject") then pcall(function() v651.Visible=false;end);end end v33.Visible=false;v542=7 -5 ;end if (v542==0) then TweenService:Create(v33,TweenInfo.new(551.4 -(83 + 468) ),{BackgroundTransparency=1807 -(1202 + 604) }):Play();task.wait(0.3);v542=1;end end else v100.Text="Invalid key. Try again.";v100.TextColor3=v6.no;TweenService:Create(v77,TweenInfo.new(0.08 -0 ,Enum.EasingStyle.Bounce),{BackgroundColor3=Color3.fromRGB(99 -39 ,55 -35 ,345 -(45 + 280) )}):Play();task.delay(0.4 + 0 ,function() TweenService:Create(v77,TweenInfo.new(0.2 + 0 ),{BackgroundColor3=v6.surface}):Play();end);end break;end end end);function launchMainUI() local v156=Instance.new("Frame");v156.Name="Panel";v156.Size=UDim2.new(0,228,0 + 0 ,366 + 294 );v156.Position=UDim2.new(1, -246,0.5 + 0 , -(611 -281));v156.BackgroundColor3=v6.bg;v156.BorderSizePixel=1911 -(340 + 1571) ;v156.Parent=v27;Instance.new("UICorner",v156).CornerRadius=UDim.new(0 + 0 ,14);local v165=Instance.new("UIStroke",v156);v165.Color=v6.border;v165.Thickness=1773 -(1733 + 39) ;v165.Transparency=0.4 -0 ;local v170=Instance.new("UIListLayout",v156);v170.Padding=UDim.new(0,1034 -(125 + 909) );v170.FillDirection=Enum.FillDirection.Vertical;v170.SortOrder=Enum.SortOrder.LayoutOrder;local v176=Instance.new("UIPadding",v156);v176.PaddingLeft=UDim.new(0,1962 -(1096 + 852) );v176.PaddingRight=UDim.new(0 + 0 ,14);v176.PaddingTop=UDim.new(0 -0 ,14);v176.PaddingBottom=UDim.new(0,14 + 0 );do local v348=512 -(409 + 103) ;local v349;local v350;local v351;while true do if (v348==(238 -(46 + 190))) then v156.InputEnded:Connect(function(v546) if ((v546.UserInputType==Enum.UserInputType.MouseButton1) or (v546.UserInputType==Enum.UserInputType.Touch)) then v349=false;end end);UserInputService.InputChanged:Connect(function(v547) local v548=95 -(51 + 44) ;while true do if (0==v548) then if  not v349 then return;end if ((v547.UserInputType==Enum.UserInputType.MouseMovement) or (v547.UserInputType==Enum.UserInputType.Touch)) then local v667=0 + 0 ;local v668;while true do if (v667==0) then v668=Vector2.new(v547.Position.X,v547.Position.Y) -v350 ;v156.Position=UDim2.new(1317 -(1114 + 203) ,v351.X + v668.X ,0,v351.Y + v668.Y );break;end end end break;end end end);break;end if (v348==(727 -(228 + 498))) then v351=Vector2.new();v156.InputBegan:Connect(function(v549) if ((v549.UserInputType==Enum.UserInputType.MouseButton1) or (v549.UserInputType==Enum.UserInputType.Touch)) then local v595=0 + 0 ;while true do if (v595==(0 + 0)) then v349=true;v350=Vector2.new(v549.Position.X,v549.Position.Y);v595=664 -(174 + 489) ;end if (v595==(2 -1)) then v351=Vector2.new(v156.Position.X.Offset,v156.Position.Y.Offset);break;end end end end);v348=2;end if (v348==0) then local v502=0;while true do if (v502==1) then v348=1906 -(830 + 1075) ;break;end if (v502==0) then v349=false;v350=Vector2.new();v502=525 -(303 + 221) ;end end end end end local function v181(v352,v353) local v354=1269 -(231 + 1038) ;local v355;while true do if ((0 + 0)==v354) then local v503=1162 -(171 + 991) ;while true do if (1==v503) then v354=1;break;end if (v503==(0 -0)) then v355=Instance.new("Frame",v156);v355.Size=UDim2.new(2 -1 ,0,0,v353 or (19 -11) );v503=1;end end end if (v354==(1 + 0)) then v355.BackgroundTransparency=3 -2 ;v355.LayoutOrder=v352;break;end end end local function v182(v356) local v357=Instance.new("Frame",v156);v357.Size=UDim2.new(2 -1 ,0,0 -0 ,3 -2 );v357.BackgroundColor3=v6.border;v357.BorderSizePixel=1248 -(111 + 1137) ;v357.LayoutOrder=v356;end local v183=Instance.new("Frame",v156);v183.Size=UDim2.new(159 -(91 + 67) ,0,0,107 -71 );v183.BackgroundTransparency=1 + 0 ;v183.LayoutOrder=524 -(423 + 100) ;local v187=Instance.new("TextLabel",v183);v187.Size=UDim2.new(1,0,0.6 + 0 ,0);v187.BackgroundTransparency=1;v187.Text="GHOST  INFO";v187.TextColor3=v6.text;v187.Font=Enum.Font.GothamBold;v187.TextScaled=false;v187.TextSize=13;v187.TextXAlignment=Enum.TextXAlignment.Left;local v199=Instance.new("TextLabel",v183);v199.Size=UDim2.new(1,0 -0 ,0.4 + 0 ,771 -(326 + 445) );v199.Position=UDim2.new(0,0,0.6,0);v199.BackgroundTransparency=4 -3 ;v199.Text="Evidence tracker  v7";v199.TextColor3=v6.muted;v199.Font=Enum.Font.Gotham;v199.TextScaled=false;v199.TextSize=22 -12 ;v199.TextXAlignment=Enum.TextXAlignment.Left;v182(4 -2 );v181(3,719 -(530 + 181) );local v211=Instance.new("Frame",v156);v211.Size=UDim2.new(882 -(614 + 267) ,32 -(19 + 13) ,0,70);v211.BackgroundColor3=Color3.fromRGB(32 -12 ,36 -20 ,102 -66 );v211.BorderSizePixel=0 + 0 ;v211.LayoutOrder=6 -2 ;Instance.new("UICorner",v211).CornerRadius=UDim.new(0 -0 ,1822 -(1293 + 519) );local v217=Instance.new("UIStroke",v211);v217.Color=v6.accent;v217.Thickness=1 -0 ;v217.Transparency=0.5 -0 ;local v222=Instance.new("TextLabel",v211);v222.Size=UDim2.new(1 -0 , -(51 -39),0 -0 ,8 + 6 );v222.Position=UDim2.new(0,2 + 6 ,0 -0 ,1 + 3 );v222.BackgroundTransparency=1;v222.Text="POSSIBLE GHOST";v222.TextColor3=v6.muted;v222.Font=Enum.Font.Gotham;v222.TextScaled=false;v222.TextSize=3 + 6 ;v222.TextXAlignment=Enum.TextXAlignment.Left;v22=Instance.new("TextLabel",v211);v22.Size=UDim2.new(1 + 0 , -(1108 -(709 + 387)),1858 -(673 + 1185) ,18);v22.Position=UDim2.new(0 -0 ,25 -17 ,0,17);v22.BackgroundTransparency=1 -0 ;v22.Text="? candidates";v22.TextColor3=v6.muted;v22.Font=Enum.Font.GothamBold;v22.TextScaled=false;v22.TextSize=13;v22.TextXAlignment=Enum.TextXAlignment.Left;v23=Instance.new("TextLabel",v211);v23.Size=UDim2.new(1, -(9 + 3),0 + 0 ,15 -3 );v23.Position=UDim2.new(0 + 0 ,8,0 -0 ,70 -34 );v23.BackgroundTransparency=1881 -(446 + 1434) ;v23.Text="";v23.TextColor3=v6.trait;v23.Font=Enum.Font.Gotham;v23.TextScaled=false;v23.TextSize=1292 -(1040 + 243) ;v23.TextXAlignment=Enum.TextXAlignment.Left;v24=Instance.new("TextLabel",v211);v24.Size=UDim2.new(2 -1 , -(1859 -(559 + 1288)),1931 -(609 + 1322) ,12);v24.Position=UDim2.new(454 -(13 + 441) ,29 -21 ,0 -0 ,52);v24.BackgroundTransparency=1;v24.Text="";v24.TextColor3=v6.accent;v24.Font=Enum.Font.Gotham;v24.TextScaled=false;v24.TextSize=44 -35 ;v24.TextXAlignment=Enum.TextXAlignment.Left;v181(1 + 4 ,8);v182(21 -15 );v181(3 + 4 ,4 + 4 );local function v260(v363,v364,v365) local v366=0 -0 ;local v367;local v368;local v369;while true do if (v366==(3 + 2)) then local v506=0 -0 ;while true do if (v506==2) then v367.MouseLeave:Connect(function() TweenService:Create(v367,TweenInfo.new(0.15 + 0 ),{BackgroundColor3=v6.surface}):Play();end);v366=4 + 2 ;break;end if (0==v506) then v369.Font=Enum.Font.GothamBold;v369.TextColor3=v6.text;v506=1 + 0 ;end if (v506==(1 + 0)) then v369.TextXAlignment=Enum.TextXAlignment.Left;v367.MouseEnter:Connect(function() TweenService:Create(v367,TweenInfo.new(0.15 + 0 ),{BackgroundColor3=v6.btnHover}):Play();end);v506=435 -(153 + 280) ;end end end if (v366==(5 -3)) then local v507=0;while true do if (v507==(2 + 0)) then v368.TextSize=6 + 8 ;v366=3;break;end if (v507==0) then v368.Position=UDim2.new(0,10,0 + 0 ,0);v368.BackgroundTransparency=1 + 0 ;v507=1;end if (v507==(1 + 0)) then v368.Text=v363;v368.TextScaled=false;v507=2 -0 ;end end end if (v366==(4 + 2)) then v181(v365 + (667.5 -(89 + 578)) ,4 + 1 );return v367,v369;end if (v366==(1 -0)) then local v508=1049 -(572 + 477) ;while true do if (v508==(1 + 0)) then Instance.new("UICorner",v367).CornerRadius=UDim.new(0 + 0 ,9);v368=Instance.new("TextLabel",v367);v508=1 + 1 ;end if (v508==2) then v368.Size=UDim2.new(86 -(84 + 2) ,39 -15 ,1,0 + 0 );v366=844 -(497 + 345) ;break;end if (v508==(0 + 0)) then v367.Text="";v367.LayoutOrder=v365;v508=1;end end end if (v366==(0 + 0)) then v367=Instance.new("TextButton",v156);v367.Size=UDim2.new(1334 -(605 + 728) ,0 + 0 ,0,79 -43 );v367.BackgroundColor3=v6.surface;v367.BorderSizePixel=0;v367.AutoButtonColor=false;v366=1;end if (3==v366) then local v514=0 + 0 ;while true do if (v514==(0 -0)) then v368.Font=Enum.Font.Gotham;v368.TextColor3=v6.accent;v514=1 + 0 ;end if (v514==(5 -3)) then v369.Size=UDim2.new(1, -(34 + 10),490 -(457 + 32) ,0 + 0 );v366=1406 -(832 + 570) ;break;end if (1==v514) then v368.TextXAlignment=Enum.TextXAlignment.Center;v369=Instance.new("TextLabel",v367);v514=2 + 0 ;end end end if (v366==4) then v369.Position=UDim2.new(0 + 0 ,38,0 -0 ,0 + 0 );v369.BackgroundTransparency=1;v369.Text=v364;v369.TextScaled=false;v369.TextSize=808 -(588 + 208) ;v366=13 -8 ;end end end local v261,v262=v260("👻","TP to Ghost",10);local v263,v262=v260("🦴","Collect Bone",11);local v264,v262=v260("📡","Check Motion",12);local v265,v262=v260("🚐","TP to Van",1813 -(884 + 916) );local v266,v267=v260("⚡","Inf Stamina",14);v182(31 -16 );v181(16,5 + 3 );local function v268(v370,v371) local v372=Instance.new("Frame",v156);v372.Size=UDim2.new(654 -(232 + 421) ,0,1889 -(1569 + 320) ,24);v372.BackgroundTransparency=1 + 0 ;v372.LayoutOrder=v371;local v376=Instance.new("Frame",v372);v376.Size=UDim2.new(0,8,0 + 0 ,26 -18 );v376.Position=UDim2.new(605 -(316 + 289) ,0 -0 ,0.5 + 0 , -(1457 -(666 + 787)));v376.BackgroundColor3=v6.muted;v376.BorderSizePixel=425 -(360 + 65) ;Instance.new("UICorner",v376).CornerRadius=UDim.new(1 + 0 ,254 -(79 + 175) );local v383=Instance.new("TextLabel",v372);v383.Size=UDim2.new(0.62, -16,1,0 -0 );v383.Position=UDim2.new(0 + 0 ,54 -36 ,0 -0 ,899 -(503 + 396) );v383.BackgroundTransparency=1;v383.Text=v370;v383.TextScaled=false;v383.TextSize=192 -(92 + 89) ;v383.Font=Enum.Font.Gotham;v383.TextColor3=v6.text;v383.TextXAlignment=Enum.TextXAlignment.Left;local v396=Instance.new("TextLabel",v372);v396.Size=UDim2.new(0.38,0 -0 ,1 + 0 ,0 + 0 );v396.Position=UDim2.new(0.62 -0 ,0 + 0 ,0,0 -0 );v396.BackgroundTransparency=1 + 0 ;v396.Text="?";v396.TextScaled=false;v396.TextSize=6 + 5 ;v396.Font=Enum.Font.GothamBold;v396.TextColor3=v6.muted;v396.TextXAlignment=Enum.TextXAlignment.Right;v181(v371 + (0.5 -0) ,1 + 1 );return v376,v396;end local v269,v270=v268("EMF Level 5",20);local v271,v272=v268("Motion",31 -10 );local v273,v274=v268("Ghost Orbs",22);local v275,v276=v268("Fingerprints",1267 -(485 + 759) );local v277,v278=v268("Book",55 -31 );v182(1214 -(442 + 747) );v181(1161 -(832 + 303) ,954 -(88 + 858) );local v279=Instance.new("Frame",v156);v279.Size=UDim2.new(1,0 + 0 ,0 + 0 ,28);v279.BackgroundColor3=Color3.fromRGB(2 + 38 ,30,799 -(766 + 23) );v279.BorderSizePixel=0 -0 ;v279.LayoutOrder=27;Instance.new("UICorner",v279).CornerRadius=UDim.new(0 -0 ,20 -12 );local v285=Instance.new("UIStroke",v279);v285.Color=v6.trait;v285.Thickness=3 -2 ;v285.Transparency=0.5;local v289=Instance.new("TextLabel",v279);v289.Size=UDim2.new(1073 -(1036 + 37) ,16 + 6 ,1 -0 ,0);v289.Position=UDim2.new(0 + 0 ,1488 -(641 + 839) ,913 -(910 + 3) ,0);v289.BackgroundTransparency=2 -1 ;v289.Text="✦";v289.TextScaled=false;v289.TextSize=11;v289.Font=Enum.Font.GothamBold;v289.TextColor3=v6.trait;v289.TextXAlignment=Enum.TextXAlignment.Center;local v300=Instance.new("TextLabel",v279);v300.Size=UDim2.new(1685 -(1466 + 218) , -30,1 + 0 ,0);v300.Position=UDim2.new(1148 -(556 + 592) ,11 + 19 ,808 -(329 + 479) ,854 -(174 + 680) );v300.BackgroundTransparency=1;v300.Text="Trait: —";v300.TextScaled=false;v300.TextSize=37 -26 ;v300.Font=Enum.Font.GothamBold;v300.TextColor3=v6.muted;v300.TextXAlignment=Enum.TextXAlignment.Left;v181(57 -29 ,6);local v310=Instance.new("Frame",v156);v310.Size=UDim2.new(1 + 0 ,739 -(396 + 343) ,0 + 0 ,22);v310.BackgroundTransparency=1;v310.LayoutOrder=29;local v314=Instance.new("TextLabel",v310);v314.Size=UDim2.new(1477 -(29 + 1448) ,1405 -(135 + 1254) ,3 -2 ,0 -0 );v314.BackgroundTransparency=1 + 0 ;v314.Text="💨";v314.TextScaled=false;v314.TextSize=1538 -(389 + 1138) ;v314.Font=Enum.Font.Gotham;v314.TextXAlignment=Enum.TextXAlignment.Left;local v322=Instance.new("TextLabel",v310);v322.Size=UDim2.new(575 -(102 + 472) , -(19 + 1),1 + 0 ,0 + 0 );v322.Position=UDim2.new(1545 -(320 + 1225) ,35 -15 ,0,0);v322.BackgroundTransparency=1 + 0 ;v322.Text="Speed: 0.0";v322.TextScaled=false;v322.TextSize=1475 -(157 + 1307) ;v322.Font=Enum.Font.GothamBold;v322.TextColor3=v6.accent;v322.TextXAlignment=Enum.TextXAlignment.Left;v261.MouseButton1Click:Connect(function() local v408=1859 -(821 + 1038) ;local v409;local v410;local v411;while true do if (v408==(4 -2)) then v410.CFrame=CFrame.new(v411 + Vector3.new(0 + 0 ,5,0 -0 ) );workspace.CurrentCamera.CFrame=CFrame.new(workspace.CurrentCamera.CFrame.Position,v411);break;end if (v408==(0 + 0)) then local v522=0 -0 ;while true do if (v522==(1026 -(834 + 192))) then v409=player.Character or player.CharacterAdded:Wait() ;v410=v409:WaitForChild("HumanoidRootPart");v522=1 + 0 ;end if (v522==(1 + 0)) then v408=1;break;end end end if (v408==(1 + 0)) then v411=v9(ghost);if  not v411 then return;end v408=2;end end end);v263.MouseButton1Click:Connect(function() if  not v2 then return;end local v412=player.Character or player.CharacterAdded:Wait() ;local v413=v412:WaitForChild("HumanoidRootPart");local v414=v9(v2);if  not v414 then return;end local v415=v413.CFrame;v413.CFrame=CFrame.new(v414 + Vector3.new(0 -0 ,4,304 -(300 + 4) ) );task.wait(0.2);workspace.CurrentCamera.CFrame=CFrame.new(workspace.CurrentCamera.CFrame.Position,v414);task.wait(0.2);local v418=v2:FindFirstChildWhichIsA("ProximityPrompt",true);if v418 then pcall(fireproximityprompt,v418);end task.wait(0.3 + 0 );v413.CFrame=v415;end);v264.MouseButton1Click:Connect(function() local v419=0 -0 ;local v420;local v421;local v422;local v423;local v424;while true do if (v419==0) then v420=workspace.NPCs:FindFirstChildOfClass("Model");if  not v420 then return;end v421=v420:FindFirstChild("HumanoidRootPart");v419=363 -(112 + 250) ;end if (v419==(2 + 1)) then for v550 in pairs(v422) do if v550:IsA("Part") then if v10(v550.Color,v11) then v423=true;break;elseif v10(v550.Color,v12) then v424=true;end end end for v551,v552 in pairs(v422) do v551.CFrame=v552;end if v423 then v20("motion",v271,v272);elseif (v424 and  not v16['motion']) then v21("motion",v271,v272);end break;end if (v419==(4 -2)) then task.wait(0.15);v423=false;v424=false;v419=2 + 1 ;end if (v419==(1 + 0)) then local v523=0;while true do if ((0 + 0)==v523) then if  not v421 then return;end v422={};v523=1 + 0 ;end if (v523==1) then for v636,v637 in pairs(motions:GetDescendants()) do if v637:IsA("Part") then local v669=0;while true do if (v669==(0 + 0)) then v422[v637]=v637.CFrame;v637.CFrame=v421.CFrame;break;end end end end v419=1416 -(1001 + 413) ;break;end end end end end);v265.MouseButton1Click:Connect(function() local v425=0 -0 ;local v426;local v427;local v428;while true do if (v425==1) then v428=workspace:FindFirstChild("Van");if (v428 and v428.PrimaryPart) then v427.CFrame=v428.PrimaryPart.CFrame + Vector3.new(0,887 -(244 + 638) ,693 -(627 + 66) ) ;end break;end if (v425==(0 -0)) then local v524=602 -(512 + 90) ;while true do if (v524==(1906 -(1665 + 241))) then v426=player.Character or player.CharacterAdded:Wait() ;v427=v426:WaitForChild("HumanoidRootPart");v524=718 -(373 + 344) ;end if (v524==(1 + 0)) then v425=1;break;end end end end end);local v332=false;local v333;v267.TextColor3=v6.no;v266.MouseButton1Click:Connect(function() local v429=0 + 0 ;while true do if (v429==0) then v332= not v332;if v332 then local v577=0 -0 ;local v578;while true do if (v577==(0 -0)) then v578=0;while true do if (v578==(1100 -(35 + 1064))) then if  not v333 then v333=RunService.RenderStepped:Connect(function() player:SetAttribute("Stamina",73 + 27 );end);end break;end if (v578==(0 -0)) then v267.Text="Inf Stamina  ON";v267.TextColor3=v6.yes;v578=1;end end break;end end else local v579=0;while true do if (v579==(1 + 0)) then if v333 then local v672=1236 -(298 + 938) ;local v673;while true do if (v672==0) then v673=1259 -(233 + 1026) ;while true do if (v673==(1666 -(636 + 1030))) then v333:Disconnect();v333=nil;break;end end break;end end end break;end if (v579==(0 + 0)) then v267.Text="Inf Stamina";v267.TextColor3=v6.text;v579=1 + 0 ;end end end break;end end end);v0.ChildAdded:Connect(function(v430) if (v430.Name=="EMF5") then v20("emf",v269,v270);end end);fingerprints.ChildAdded:Connect(function() v20("fingerprints",v275,v276);end);orbs.ChildAdded:Connect(function() v20("orbs",v273,v274);end);task.delay(120,function() local v431=0 + 0 ;while true do if (v431==(0 + 0)) then if  not v16['emf'] then v21("emf",v269,v270);end if  not v16['fingerprints'] then v21("fingerprints",v275,v276);end v431=222 -(55 + 166) ;end if (v431==1) then if  not v16['orbs'] then v21("orbs",v273,v274);end break;end end end);task.spawn(function() while true do local v472=0 + 0 ;local v473;local v474;local v475;while true do if (v472==(0 + 0)) then v473=0;v474=nil;v472=3 -2 ;end if (v472==(298 -(36 + 261))) then v475=nil;while true do if (v473==(1 -0)) then for v655,v656 in pairs(motions:GetDescendants()) do if v656:IsA("Part") then if v10(v656.Color,v11) then v474=true;break;elseif v10(v656.Color,v12) then v475=true;end end end if v474 then v20("motion",v271,v272);elseif (v475 and  not v16['motion']) then v21("motion",v271,v272);end v473=2;end if (v473==(1368 -(34 + 1334))) then v474=false;v475=false;v473=1 + 0 ;end if (v473==(2 + 0)) then task.wait(1283.5 -(1035 + 248) );break;end end break;end end end end);local function v336(v432) local function v433() local v476=0;local v477;local v478;while true do if ((21 -(20 + 1))==v476) then if v16['book'] then return;end v477=v432:FindFirstChild("LeftPage");v476=1 + 0 ;end if (v476==1) then v478=v432:FindFirstChild("RightPage");if ((v477 and ( #v477:GetChildren()>(319 -(134 + 185)))) or (v478 and ( #v478:GetChildren()>(1133 -(549 + 584))))) then v20("book",v277,v278);end break;end end end v433();local function v434(v479) local v480=685 -(314 + 371) ;while true do if (v480==(0 -0)) then if  not v479 then return;end v479.ChildAdded:Connect(function() v20("book",v277,v278);end);break;end end end v434(v432:FindFirstChild("LeftPage"));v434(v432:FindFirstChild("RightPage"));v432.ChildAdded:Connect(function(v481) if ((v481.Name=="LeftPage") or (v481.Name=="RightPage")) then local v525=968 -(478 + 490) ;local v526;while true do if (v525==0) then v526=0 + 0 ;while true do if (v526==(1172 -(786 + 386))) then v434(v481);v433();break;end end break;end end end end);end for v435,v436 in pairs(v1:GetChildren()) do if (v436.Name=="Book") then v336(v436);end end v1.ChildAdded:Connect(function(v437) if (v437.Name=="Book") then v336(v437);end end);task.delay(583 -403 ,function() if  not v16['book'] then v21("book",v277,v278);end end);local v337=false;task.spawn(function() local v438=ghost:WaitForChild("Base");local v439={};local v440=1387 -(1055 + 324) ;local v441=1.5;local v442=1343 -(1093 + 247) ;while  not v337 do local v482=((v438.Transparency>(0.5 + 0)) and (1 + 0)) or (0 -0) ;table.insert(v439,v482);if ( #v439>v440) then table.remove(v439,1);end if ( #v439>=v440) then local v527=0;local v528;while true do if (v527==(0 -0)) then v528=0;for v638=5 -3 , #v439 do if (v439[v638]~=v439[v638-(2 -1) ]) then v528+=1 end end v527=1 + 0 ;end if ((3 -2)==v527) then if (v528>=v442) then local v657=0;while true do if (v657==(3 -2)) then v300.TextColor3=v6.trait;v20("flicker",v271,v272);break;end if (v657==(0 + 0)) then v337=true;v300.Text="Trait: Flicker";v657=1;end end end break;end end end task.wait(v441);end end);local function v338(v443) local v444=0;local v445;while true do if (v444==(0 -0)) then if v337 then return;end v445=v443:FindFirstChild("Main");v444=689 -(364 + 324) ;end if (v444==(2 -1)) then if  not v445 then return;end if v445:FindFirstChildWhichIsA("BodyForce") then v337=true;v300.Text="Trait: Trickster";v300.TextColor3=v6.trait;v20("trickster",v271,v272);return;end v444=4 -2 ;end if (v444==2) then v445.ChildAdded:Connect(function(v554) local v555=0 + 0 ;while true do if (v555==(0 -0)) then if v337 then return;end if v554:IsA("BodyForce") then local v670=0;while true do if (v670==(0 -0)) then v337=true;v300.Text="Trait: Trickster";v670=2 -1 ;end if (v670==(1269 -(1249 + 19))) then v300.TextColor3=v6.trait;v20("trickster",v271,v272);break;end end end break;end end end);break;end end end for v446,v447 in pairs(v1:GetChildren()) do if v447:IsA("Model") then v338(v447);end end v1.ChildAdded:Connect(function(v448) local v449=0 + 0 ;while true do if (v449==0) then if v337 then return;end if v448:IsA("Model") then v338(v448);end break;end end end);task.spawn(function() while true do local v483=0;local v484;while true do if (v483==(3 -2)) then if (v484>(v19 + 0.2)) then local v619=1086 -(686 + 400) ;local v620;while true do if (v619==(0 + 0)) then v620=229 -(73 + 156) ;while true do if (v620==(0 + 0)) then v19=v484;v26();break;end end break;end end elseif (v484>=(823 -(721 + 90))) then v26();end task.wait(0.3);break;end if (v483==(0 + 0)) then local v556=0 -0 ;while true do if (v556==0) then v484=ghost:GetAttribute("Speed") or (470 -(224 + 246)) ;v322.Text="Speed: "   .. string.format("%.1f",v484) ;v556=1 -0 ;end if (v556==(1 -0)) then v483=1;break;end end end end end end);if v2 then local v485=0 + 0 ;local v486;while true do if ((0 + 0)==v485) then v486=(v2:IsA("BasePart") and v2) or v2:FindFirstChildWhichIsA("BasePart",true) ;if v486 then local v621=0 + 0 ;local v622;local v623;local v624;while true do if (v621==(1 -0)) then v624=nil;while true do if (v622==(6 -4)) then v624.TextColor3=v6.yes;v624.TextScaled=false;v624.TextSize=527 -(203 + 310) ;v624.Font=Enum.Font.GothamBold;break;end if (v622==(1994 -(1238 + 755))) then v624=Instance.new("TextLabel",v623);v624.Size=UDim2.new(1 + 0 ,0,1535 -(709 + 825) ,0);v624.BackgroundTransparency=1 -0 ;v624.Text="🦴 Bone";v622=2 -0 ;end if (v622==(864 -(196 + 668))) then v623=Instance.new("BillboardGui",v486);v623.Size=UDim2.new(0,394 -294 ,0 -0 ,32);v623.AlwaysOnTop=true;v623.StudsOffset=Vector3.new(833 -(171 + 662) ,96 -(4 + 89) ,0 -0 );v622=1 + 0 ;end end break;end if (v621==(0 -0)) then v622=0;v623=nil;v621=1;end end end break;end end end local v339;local function v340(v450) if v339 then v339:Destroy();end v339=Instance.new("BillboardGui",v450);v339.Size=UDim2.new(0 + 0 ,1616 -(35 + 1451) ,1453 -(28 + 1425) ,2029 -(941 + 1052) );v339.AlwaysOnTop=true;v339.StudsOffset=Vector3.new(0 + 0 ,1517 -(822 + 692) ,0);local v454=Instance.new("TextLabel",v339);v454.Size=UDim2.new(1 -0 ,0 + 0 ,298 -(45 + 252) ,0);v454.BackgroundTransparency=1 + 0 ;v454.Text="👻 Ghost";v454.TextColor3=v6.no;v454.TextScaled=false;v454.TextSize=5 + 9 ;v454.Font=Enum.Font.GothamBold;end task.spawn(function() while true do local v487=0 -0 ;local v488;while true do if (1==v487) then task.wait(1);break;end if (v487==(433 -(114 + 319))) then v488=workspace.ServerNPCs:FindFirstChild("GLOBAL");if v488 then local v625=0;local v626;while true do if ((0 -0)==v625) then v626=v488.PrimaryPart or v488:FindFirstChildWhichIsA("BasePart") ;if (v626 and ( not v339 or (v339.Adornee~=v626))) then v340(v626);end break;end end end v487=1 -0 ;end end end end);end if v3 then v33.Visible=true;else local v465=0 + 0 ;local v466;while true do if ((0 -0)==v465) then v466=0;while true do if (v466==0) then v33.Visible=false;launchMainUI();break;end end break;end end end
+local evidenceFolder = workspace.Dynamic.Evidence
+local fingerprints   = evidenceFolder.Fingerprints
+local motions        = evidenceFolder.MotionGrids
+local orbs           = evidenceFolder.Orbs
+local emfs           = evidenceFolder.EMF
+local equipment      = workspace:WaitForChild("Equipment")
+local bone           = map and map:FindFirstChild("Bone")
+
+local KEY_ENABLED = true
+local GET_KEY_URL = "https://lootdest.org/s?SsiC5LyZ"
+local VALID_KEY   = "5G0HL1P7MXNZXWDJSA13ZAWDJAMWASD"
+
+local C = {
+    bg       = Color3.fromRGB(12, 12, 14),
+    surface  = Color3.fromRGB(22, 22, 26),
+    border   = Color3.fromRGB(40, 40, 48),
+    accent   = Color3.fromRGB(130, 100, 255),
+    text     = Color3.fromRGB(220, 220, 230),
+    muted    = Color3.fromRGB(110, 110, 130),
+    yes      = Color3.fromRGB(80, 230, 140),
+    no       = Color3.fromRGB(230, 70,  80),
+    trait    = Color3.fromRGB(255, 190,  60),
+    btnHover = Color3.fromRGB(35, 35, 45),
+    ghost    = Color3.fromRGB(180, 140, 255),
+}
+
+
+local SPEED_TOL = 0.4
+
+local GHOSTS = {
+    { name="Otakata",  ev={"emf","fingerprints","orbs"},
+      speed={ min=14.0, max=14.8, fixed=true, unique=true,
+              hint="Always 14.4 — only ghost with this speed" } },
+    { name="Haint",    ev={"motion","orbs"},
+      speed={ min=22.5, max=24.5, fixed=true, unique=true,
+              hint="Always ~23.4 — fastest ghost" } },
+    { name="Blair",    ev={"emf"},
+      speed={ min=13.4, max=14.2, fixed=true,
+              hint="Always 13.8" } },
+    { name="Duppy",    ev={"trickster","emf","orbs"},
+      speed={ min=14.7, max=15.5, fixed=true,
+              hint="Always 15.1" } },
+    { name="Myling",   ev={"emf","motion"},
+      speed={ min=17.5, max=18.3, fixed=true, unique=true,
+              hint="Always ~17.9" } },
+    { name="Wendigo",  ev={"motion"},
+      speed={ min=14.7, max=15.5, fixed=true,
+              hint="Always 15.1" } },
+    { name="Yokai",    ev={"trickster","motion","fingerprints"},
+      speed={ min=13.4, max=17.0, fixed=false,
+              hint="Starts 13.8, can spike to 16.5+" } },
+    { name="Afarit",   ev={"motion","orbs"},
+      speed={ min=13.4, max=19.7, fixed=false,
+              hint="13.8 base → 19.3 watching player" } },
+    { name="Aswang",   ev={"emf","fingerprints"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Banshee",  ev={"emf","fingerprints"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Bhuta",    ev={"book","motion"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Bogey",    ev={"orbs","fingerprints","motion"},
+      speed={ min=12.0, max=14.2, fixed=false,
+              hint="12.4 base → 13.8 in hunt" } },
+    { name="Demon",    ev={"flicker","book"},
+      speed={ min=12.0, max=15.0, fixed=false,
+              hint="12.4, slowly +0.1/s in hunt" } },
+    { name="Douen",    ev={"trickster","motion","fingerprints","book"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Egui",     ev={"orbs","book"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Jinn",     ev={"flicker","emf","motion","orbs"},
+      speed={ min=12.0, max=22.4, fixed=false,
+              hint="12.4 base → up to 22.0 in hunt" } },
+    { name="Mare",     ev={"flicker","orbs"},
+      speed={ min=12.0, max=18.3, fixed=false,
+              hint="12.4 base → up to 17.9 in hunt" } },
+    { name="Mimic",    ev={"book","emf"},
+      speed={ min=12.0, max=99.0, fixed=false,
+              hint="Copies another ghost speed after 2 min" } },
+    { name="Oni",      ev={"motion","book"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Phantom",  ev={"emf","orbs"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Polter",   ev={"trickster","fingerprints","orbs"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Preta",    ev={"motion","fingerprints"},
+      speed={ min=15.4, max=22.7, fixed=false, unique = true,
+              hint="15.4 / 18.0 / 22.3 by player count" } },
+    { name="Revenant", ev={"emf","fingerprints","book"},
+      speed={ min=12.0, max=18.3, fixed=false,
+              hint="12.4 → 13.8 → 17.9 spotting player" } },
+    { name="Shade",    ev={"emf","book","orbs"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Spirit",   ev={"flicker","book","fingerprints"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Thaye",    ev={"orbs","fingerprints"},
+      speed={ min=13.4, max=17.0, fixed=false,
+              hint="13.8 base, slowly accelerates" } },
+    { name="Upyr",     ev={"emf","motion"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Wisp",     ev={"flicker","orbs","fingerprints","book"},
+      speed={ min=10.6, max=13.2, fixed=false,
+              hint="~12.4 base, slows to 11 in hunt" } },
+    { name="Wraith",   ev={"motion","book","emf"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+    { name="Yurei",    ev={"book","orbs"},
+      speed={ min=12.0, max=13.2, fixed=false, hint="~12.4 base" } },
+}
+
+
+local function getPosition(inst)
+    if not inst then return end
+    if inst:IsA("BasePart") then return inst.Position end
+    if inst.PrimaryPart then return inst.PrimaryPart.Position end
+    local p = inst:FindFirstChildWhichIsA("BasePart", true)
+    if p then return p.Position end
+end
+
+local function colorClose(c1, c2, tol)
+    tol = tol or 0.01
+    return math.abs(c1.R - c2.R) < tol
+       and math.abs(c1.G - c2.G) < tol
+       and math.abs(c1.B - c2.B) < tol
+end
+
+local COLOR_MOTION_YES = Color3.fromRGB(252, 52, 52)
+local COLOR_TOOTHPASTE = BrickColor.new("Toothpaste").Color
+
+local function speedCouldMatch(g, speed)
+    local s = g.speed
+    if s.fixed then
+        return speed >= (s.min - SPEED_TOL) and speed <= (s.max + SPEED_TOL)
+    else
+        return speed <= (s.max + SPEED_TOL)
+    end
+end
+
+local function uniqueSpeedInstantID(speed)
+    if speed < 12.0 then return nil end
+    local matches = {}
+    for _, g in ipairs(GHOSTS) do
+        if speedCouldMatch(g, speed) then
+            table.insert(matches, g)
+        end
+    end
+    if #matches == 1 then
+        return matches[1].name, matches[1].speed.hint
+    end
+    return nil
+end
+
+local function speedTag(speed)
+    if speed < 12.0 then return "" end
+    if speed >= 22.5 then return "🔴 >"..string.format("%.1f",speed)..": Haint" end
+    if speed >= 21.0 then return "🟠 >"..string.format("%.1f",speed)..": Jinn / Preta / Mimic" end
+    if speed >= 18.0 then return "🟡 ~"..string.format("%.1f",speed)..": Jinn / Preta / Myling" end
+    if speed >= 17.0 then return "🟡 ~"..string.format("%.1f",speed)..": Myling / Mare / Revenant / Preta" end
+    if speed >= 14.9 and speed <= 15.3 then return "🟢 ~15.1: Duppy or Wendigo" end
+    if speed >= 15.0 then return "🟡 ~"..string.format("%.1f",speed)..": Duppy / Wendigo / Preta / Afarit" end
+    if speed >= 14.0 and speed <= 14.8 then return "🟣 ~14.4: OTAKATA (unique!)" end
+    if speed >= 13.4 and speed <= 14.0 then return "🔵 ~13.8: Blair / Afarit / Thaye / Yokai" end
+    return ""
+end
+
+
+local detectedEv  = {}
+local rejectedEv  = {}
+local anyEvidence = false
+local maxSpeedSeen = 0
+
+local confirmEvidence, rejectEvidence
+local ghostNameLbl, ghostSpeedHint, ghostSpeedTag
+
+local function setStatus(dot, pill, state)
+    if state == "Yes" then
+        dot.BackgroundColor3 = C.yes
+        pill.Text            = "YES"
+        pill.TextColor3      = C.yes
+    elseif state == "No" then
+        dot.BackgroundColor3 = C.no
+        pill.Text            = "NO"
+        pill.TextColor3      = C.no
+    else
+        dot.BackgroundColor3 = C.muted
+        pill.Text            = "?"
+        pill.TextColor3      = C.muted
+    end
+end
+
+local function updateGhostLabel()
+    if not ghostNameLbl then return end
+
+    if ghostSpeedTag then
+        ghostSpeedTag.Text = speedTag(maxSpeedSeen)
+    end
+
+    local speedActive = maxSpeedSeen >= 13.0
+    if not anyEvidence and not speedActive then
+        ghostNameLbl.Text       = "? candidates"
+        ghostNameLbl.TextColor3 = C.muted
+        if ghostSpeedHint then ghostSpeedHint.Text = "" end
+        return
+    end
+
+    local instantName, instantHint = uniqueSpeedInstantID(maxSpeedSeen)
+    if instantName and not anyEvidence then
+        ghostNameLbl.Text       = instantName
+        ghostNameLbl.TextColor3 = C.yes
+        if ghostSpeedHint then
+            ghostSpeedHint.Text       = instantHint or ""
+            ghostSpeedHint.TextColor3 = C.trait
+        end
+        return
+    end
+
+    local candidates = {}
+    for _, g in ipairs(GHOSTS) do
+        local possible = true
+        for ev in pairs(rejectedEv) do
+            for _, gev in ipairs(g.ev) do
+                if gev == ev then possible = false; break end
+            end
+            if not possible then break end
+        end
+        if possible then
+            for ev in pairs(detectedEv) do
+                local hasIt = false
+                for _, gev in ipairs(g.ev) do
+                    if gev == ev then hasIt = true; break end
+                end
+                if not hasIt then possible = false; break end
+            end
+        end
+        if possible and maxSpeedSeen >= 12.0 then
+            if not speedCouldMatch(g, maxSpeedSeen) then
+                possible = false
+            end
+        end
+        if possible then table.insert(candidates, g.name) end
+    end
+
+    if #candidates == 0 then
+        ghostNameLbl.Text       = "No match"
+        ghostNameLbl.TextColor3 = C.no
+        if ghostSpeedHint then ghostSpeedHint.Text = "" end
+    elseif #candidates == 1 then
+        ghostNameLbl.Text       = candidates[1]
+        ghostNameLbl.TextColor3 = C.yes
+        for _, gh in ipairs(GHOSTS) do
+            if gh.name == candidates[1] then
+                if ghostSpeedHint then
+                    ghostSpeedHint.Text       = gh.speed.hint or ""
+                    ghostSpeedHint.TextColor3 = C.trait
+                end
+                break
+            end
+        end
+    elseif #candidates == 2 then
+        ghostNameLbl.Text       = candidates[1] .. " / " .. candidates[2]
+        ghostNameLbl.TextColor3 = C.ghost
+        local hints = {}
+        for _, gh in ipairs(GHOSTS) do
+            if gh.name == candidates[1] or gh.name == candidates[2] then
+                if gh.speed.hint then
+                    table.insert(hints, gh.name..": "..gh.speed.hint)
+                end
+            end
+        end
+        if ghostSpeedHint then
+            ghostSpeedHint.Text       = table.concat(hints, "  |  ")
+            ghostSpeedHint.TextColor3 = C.trait
+        end
+    else
+        local joined = table.concat(candidates, " / ")
+        if #joined > 58 then joined = #candidates.." possible" end
+        ghostNameLbl.Text       = joined
+        ghostNameLbl.TextColor3 = C.ghost
+        if ghostSpeedHint then ghostSpeedHint.Text = "" end
+    end
+end
+
+confirmEvidence = function(key, dot, pill)
+    if detectedEv[key] then return end
+    detectedEv[key] = true
+    anyEvidence = true
+    setStatus(dot, pill, "Yes")
+    updateGhostLabel()
+end
+
+rejectEvidence = function(key, dot, pill)
+    if detectedEv[key] then return end
+    rejectedEv[key] = true
+    setStatus(dot, pill, "No")
+    updateGhostLabel()
+end
+
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name           = "GhostInfoUI_v8"
+screenGui.ResetOnSpawn   = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent         = player:WaitForChild("PlayerGui")
+
+
+local keyScreen = Instance.new("Frame")
+keyScreen.Name             = "KeyScreen"
+keyScreen.Size             = UDim2.new(1, 0, 1, 0)
+keyScreen.BackgroundColor3 = Color3.fromRGB(8, 8, 10)
+keyScreen.BorderSizePixel  = 0
+keyScreen.ZIndex           = 10
+keyScreen.Parent           = screenGui
+
+local keyCard = Instance.new("Frame", keyScreen)
+keyCard.Size             = UDim2.new(0, 280, 0, 200)
+keyCard.Position         = UDim2.new(0.5, -140, 0.5, -100)
+keyCard.BackgroundColor3 = C.bg
+keyCard.BorderSizePixel  = 0
+Instance.new("UICorner", keyCard).CornerRadius = UDim.new(0, 16)
+
+local keyCardStroke = Instance.new("UIStroke", keyCard)
+keyCardStroke.Color        = C.accent
+keyCardStroke.Thickness    = 1
+keyCardStroke.Transparency = 0.4
+
+local keyTitle = Instance.new("TextLabel", keyCard)
+keyTitle.Size                   = UDim2.new(1, -24, 0, 28)
+keyTitle.Position               = UDim2.new(0, 12, 0, 14)
+keyTitle.BackgroundTransparency = 1
+keyTitle.Text                   = "GHOST INFO — Key System"
+keyTitle.TextColor3             = C.text
+keyTitle.Font                   = Enum.Font.GothamBold
+keyTitle.TextScaled             = false
+keyTitle.TextSize               = 13
+keyTitle.TextXAlignment         = Enum.TextXAlignment.Center
+
+local keySub = Instance.new("TextLabel", keyCard)
+keySub.Size                   = UDim2.new(1, -24, 0, 16)
+keySub.Position               = UDim2.new(0, 12, 0, 40)
+keySub.BackgroundTransparency = 1
+keySub.Text                   = "Enter your lifetime key to continue"
+keySub.TextColor3             = C.muted
+keySub.Font                   = Enum.Font.Gotham
+keySub.TextScaled             = false
+keySub.TextSize               = 10
+keySub.TextXAlignment         = Enum.TextXAlignment.Center
+
+local keyBox = Instance.new("TextBox", keyCard)
+keyBox.Size                   = UDim2.new(1, -24, 0, 34)
+keyBox.Position               = UDim2.new(0, 12, 0, 66)
+keyBox.BackgroundColor3       = C.surface
+keyBox.BorderSizePixel        = 0
+keyBox.Text                   = ""
+keyBox.PlaceholderText        = "Paste key here..."
+keyBox.PlaceholderColor3      = C.muted
+keyBox.TextColor3             = C.text
+keyBox.Font                   = Enum.Font.Gotham
+keyBox.TextScaled             = false
+keyBox.TextSize               = 11
+keyBox.ClearTextOnFocus       = false
+Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0, 8)
+
+local keyBoxPad = Instance.new("UIPadding", keyBox)
+keyBoxPad.PaddingLeft  = UDim.new(0, 10)
+keyBoxPad.PaddingRight = UDim.new(0, 10)
+
+local keyBoxStroke = Instance.new("UIStroke", keyBox)
+keyBoxStroke.Color        = C.border
+keyBoxStroke.Thickness    = 1
+keyBoxStroke.Transparency = 0.2
+
+local keyStatus = Instance.new("TextLabel", keyCard)
+keyStatus.Size                   = UDim2.new(1, -24, 0, 14)
+keyStatus.Position               = UDim2.new(0, 12, 0, 108)
+keyStatus.BackgroundTransparency = 1
+keyStatus.Text                   = ""
+keyStatus.TextColor3             = C.no
+keyStatus.Font                   = Enum.Font.Gotham
+keyStatus.TextScaled             = false
+keyStatus.TextSize               = 10
+keyStatus.TextXAlignment         = Enum.TextXAlignment.Center
+
+local function makeKeyBtn(text, xPos, bgColor)
+    local btn = Instance.new("TextButton", keyCard)
+    btn.Size             = UDim2.new(0, 118, 0, 32)
+    btn.Position         = UDim2.new(0, xPos, 0, 152)
+    btn.BackgroundColor3 = bgColor
+    btn.BorderSizePixel  = 0
+    btn.Text             = text
+    btn.TextColor3       = C.text
+    btn.Font             = Enum.Font.GothamBold
+    btn.TextScaled       = false
+    btn.TextSize         = 11
+    btn.AutoButtonColor  = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.12),
+            {BackgroundColor3 = bgColor:Lerp(Color3.new(1,1,1), 0.12)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.12),
+            {BackgroundColor3 = bgColor}):Play()
+    end)
+    return btn
+end
+
+local getLinkBtn  = makeKeyBtn("Get Lifetime Key", 12,  Color3.fromRGB(50, 40, 90))
+local checkKeyBtn = makeKeyBtn("Check Key",        142, Color3.fromRGB(40, 80, 50))
+
+getLinkBtn.MouseButton1Click:Connect(function()
+    setclipboard(GET_KEY_URL)
+    local orig = getLinkBtn.Text
+    getLinkBtn.Text       = "Copied to clipboard!"
+    getLinkBtn.TextColor3 = C.yes
+    task.delay(2, function()
+        getLinkBtn.Text       = orig
+        getLinkBtn.TextColor3 = C.text
+    end)
+end)
+
+checkKeyBtn.MouseButton1Click:Connect(function()
+    local entered = keyBox.Text:gsub("%s+", "")  -- trim whitespace
+    if entered == VALID_KEY then
+        TweenService:Create(keyScreen, TweenInfo.new(0.4),
+            {BackgroundTransparency = 1}):Play()
+        task.wait(0.3)
+        for _, d in ipairs(keyScreen:GetDescendants()) do
+            if d:IsA("GuiObject") then
+                pcall(function() d.Visible = false end)
+            end
+        end
+        keyScreen.Visible = false
+        launchMainUI()
+    else
+        keyStatus.Text       = "Invalid key. Try again."
+        keyStatus.TextColor3 = C.no
+        TweenService:Create(keyBox, TweenInfo.new(0.08, Enum.EasingStyle.Bounce),
+            {BackgroundColor3 = Color3.fromRGB(60, 20, 20)}):Play()
+        task.delay(0.4, function()
+            TweenService:Create(keyBox, TweenInfo.new(0.2),
+                {BackgroundColor3 = C.surface}):Play()
+        end)
+    end
+end)
+
+
+function launchMainUI()
+
+    local panel = Instance.new("Frame")
+    panel.Name             = "Panel"
+    panel.Size             = UDim2.new(0, 228, 0, 660)
+    panel.Position         = UDim2.new(1, -246, 0.5, -330)
+    panel.BackgroundColor3 = C.bg
+    panel.BorderSizePixel  = 0
+    panel.Parent           = screenGui
+
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 14)
+
+    local stroke = Instance.new("UIStroke", panel)
+    stroke.Color        = C.border
+    stroke.Thickness    = 1
+    stroke.Transparency = 0.4
+
+    local layout = Instance.new("UIListLayout", panel)
+    layout.Padding       = UDim.new(0, 0)
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.SortOrder     = Enum.SortOrder.LayoutOrder
+
+    local padding = Instance.new("UIPadding", panel)
+    padding.PaddingLeft   = UDim.new(0, 14)
+    padding.PaddingRight  = UDim.new(0, 14)
+    padding.PaddingTop    = UDim.new(0, 14)
+    padding.PaddingBottom = UDim.new(0, 14)
+
+    do
+        local dragging   = false
+        local dragStart  = Vector2.new()
+        local panelStart = Vector2.new()
+        panel.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+                dragging   = true
+                dragStart  = Vector2.new(input.Position.X, input.Position.Y)
+                panelStart = Vector2.new(panel.Position.X.Offset, panel.Position.Y.Offset)
+            end
+        end)
+        panel.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if not dragging then return end
+            if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+                local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
+                panel.Position = UDim2.new(0, panelStart.X + delta.X, 0, panelStart.Y + delta.Y)
+            end
+        end)
+    end
+
+    local function spacer(order, h)
+        local sp = Instance.new("Frame", panel)
+        sp.Size                   = UDim2.new(1, 0, 0, h or 8)
+        sp.BackgroundTransparency = 1
+        sp.LayoutOrder            = order
+    end
+    local function divider(order)
+        local d = Instance.new("Frame", panel)
+        d.Size             = UDim2.new(1, 0, 0, 1)
+        d.BackgroundColor3 = C.border
+        d.BorderSizePixel  = 0
+        d.LayoutOrder      = order
+    end
+
+    local header = Instance.new("Frame", panel)
+    header.Size                   = UDim2.new(1, 0, 0, 36)
+    header.BackgroundTransparency = 1
+    header.LayoutOrder            = 1
+
+    local titleLbl = Instance.new("TextLabel", header)
+    titleLbl.Size                   = UDim2.new(1, 0, 0.6, 0)
+    titleLbl.BackgroundTransparency = 1
+    titleLbl.Text                   = "GHOST  INFO"
+    titleLbl.TextColor3             = C.text
+    titleLbl.Font                   = Enum.Font.GothamBold
+    titleLbl.TextScaled             = false
+    titleLbl.TextSize               = 13
+    titleLbl.TextXAlignment         = Enum.TextXAlignment.Left
+
+    local subtitleLbl = Instance.new("TextLabel", header)
+    subtitleLbl.Size                   = UDim2.new(1, 0, 0.4, 0)
+    subtitleLbl.Position               = UDim2.new(0, 0, 0.6, 0)
+    subtitleLbl.BackgroundTransparency = 1
+    subtitleLbl.Text                   = "Evidence tracker  v7"
+    subtitleLbl.TextColor3             = C.muted
+    subtitleLbl.Font                   = Enum.Font.Gotham
+    subtitleLbl.TextScaled             = false
+    subtitleLbl.TextSize               = 10
+    subtitleLbl.TextXAlignment         = Enum.TextXAlignment.Left
+
+    divider(2)
+    spacer(3, 8)
+
+    local ghostBox = Instance.new("Frame", panel)
+    ghostBox.Size             = UDim2.new(1, 0, 0, 70)
+    ghostBox.BackgroundColor3 = Color3.fromRGB(20, 16, 36)
+    ghostBox.BorderSizePixel  = 0
+    ghostBox.LayoutOrder      = 4
+    Instance.new("UICorner", ghostBox).CornerRadius = UDim.new(0, 10)
+    local ghostStroke = Instance.new("UIStroke", ghostBox)
+    ghostStroke.Color        = C.accent
+    ghostStroke.Thickness    = 1
+    ghostStroke.Transparency = 0.5
+
+    local ghostTitleLbl2 = Instance.new("TextLabel", ghostBox)
+    ghostTitleLbl2.Size                   = UDim2.new(1, -12, 0, 14)
+    ghostTitleLbl2.Position               = UDim2.new(0, 8, 0, 4)
+    ghostTitleLbl2.BackgroundTransparency = 1
+    ghostTitleLbl2.Text                   = "POSSIBLE GHOST"
+    ghostTitleLbl2.TextColor3             = C.muted
+    ghostTitleLbl2.Font                   = Enum.Font.Gotham
+    ghostTitleLbl2.TextScaled             = false
+    ghostTitleLbl2.TextSize               = 9
+    ghostTitleLbl2.TextXAlignment         = Enum.TextXAlignment.Left
+
+    ghostNameLbl = Instance.new("TextLabel", ghostBox)
+    ghostNameLbl.Size                   = UDim2.new(1, -12, 0, 18)
+    ghostNameLbl.Position               = UDim2.new(0, 8, 0, 17)
+    ghostNameLbl.BackgroundTransparency = 1
+    ghostNameLbl.Text                   = "? candidates"
+    ghostNameLbl.TextColor3             = C.muted
+    ghostNameLbl.Font                   = Enum.Font.GothamBold
+    ghostNameLbl.TextScaled             = false
+    ghostNameLbl.TextSize               = 13
+    ghostNameLbl.TextXAlignment         = Enum.TextXAlignment.Left
+
+    ghostSpeedHint = Instance.new("TextLabel", ghostBox)
+    ghostSpeedHint.Size                   = UDim2.new(1, -12, 0, 12)
+    ghostSpeedHint.Position               = UDim2.new(0, 8, 0, 36)
+    ghostSpeedHint.BackgroundTransparency = 1
+    ghostSpeedHint.Text                   = ""
+    ghostSpeedHint.TextColor3             = C.trait
+    ghostSpeedHint.Font                   = Enum.Font.Gotham
+    ghostSpeedHint.TextScaled             = false
+    ghostSpeedHint.TextSize               = 9
+    ghostSpeedHint.TextXAlignment         = Enum.TextXAlignment.Left
+
+    ghostSpeedTag = Instance.new("TextLabel", ghostBox)
+    ghostSpeedTag.Size                   = UDim2.new(1, -12, 0, 12)
+    ghostSpeedTag.Position               = UDim2.new(0, 8, 0, 52)
+    ghostSpeedTag.BackgroundTransparency = 1
+    ghostSpeedTag.Text                   = ""
+    ghostSpeedTag.TextColor3             = C.accent
+    ghostSpeedTag.Font                   = Enum.Font.Gotham
+    ghostSpeedTag.TextScaled             = false
+    ghostSpeedTag.TextSize               = 9
+    ghostSpeedTag.TextXAlignment         = Enum.TextXAlignment.Left
+
+    spacer(5, 8)
+    divider(6)
+    spacer(7, 8)
+
+    local function makeButton(icon, text, order)
+        local btn = Instance.new("TextButton", panel)
+        btn.Size             = UDim2.new(1, 0, 0, 36)
+        btn.BackgroundColor3 = C.surface
+        btn.BorderSizePixel  = 0
+        btn.AutoButtonColor  = false
+        btn.Text             = ""
+        btn.LayoutOrder      = order
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 9)
+        local ico = Instance.new("TextLabel", btn)
+        ico.Size = UDim2.new(0, 24, 1, 0); ico.Position = UDim2.new(0, 10, 0, 0)
+        ico.BackgroundTransparency = 1; ico.Text = icon
+        ico.TextScaled = false; ico.TextSize = 14; ico.Font = Enum.Font.Gotham
+        ico.TextColor3 = C.accent; ico.TextXAlignment = Enum.TextXAlignment.Center
+        local lbl = Instance.new("TextLabel", btn)
+        lbl.Size = UDim2.new(1, -44, 1, 0); lbl.Position = UDim2.new(0, 38, 0, 0)
+        lbl.BackgroundTransparency = 1; lbl.Text = text
+        lbl.TextScaled = false; lbl.TextSize = 12; lbl.Font = Enum.Font.GothamBold
+        lbl.TextColor3 = C.text; lbl.TextXAlignment = Enum.TextXAlignment.Left
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = C.btnHover}):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = C.surface}):Play()
+        end)
+        spacer(order + 0.5, 5)
+        return btn, lbl
+    end
+
+    local tpGhostBtn, _            = makeButton("👻", "TP to Ghost",  10)
+    local collectBtn,  _           = makeButton("🦴", "Collect Bone", 11)
+    local checkPMBtn,  _           = makeButton("📡", "Check Motion", 12)
+    local tpVanBtn,    _           = makeButton("🚐", "TP to Van",    13)
+    local staminaBtn,  staminaLbl  = makeButton("⚡", "Inf Stamina",  14)
+
+    divider(15)
+    spacer(16, 8)
+
+    local function makeEvidenceRow(name, order)
+        local row = Instance.new("Frame", panel)
+        row.Size = UDim2.new(1, 0, 0, 24); row.BackgroundTransparency = 1
+        row.LayoutOrder = order
+        local dot = Instance.new("Frame", row)
+        dot.Size = UDim2.new(0, 8, 0, 8); dot.Position = UDim2.new(0, 0, 0.5, -4)
+        dot.BackgroundColor3 = C.muted; dot.BorderSizePixel = 0
+        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+        local nameLbl = Instance.new("TextLabel", row)
+        nameLbl.Size = UDim2.new(0.62, -16, 1, 0); nameLbl.Position = UDim2.new(0, 18, 0, 0)
+        nameLbl.BackgroundTransparency = 1; nameLbl.Text = name
+        nameLbl.TextScaled = false; nameLbl.TextSize = 11; nameLbl.Font = Enum.Font.Gotham
+        nameLbl.TextColor3 = C.text; nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+        local pill = Instance.new("TextLabel", row)
+        pill.Size = UDim2.new(0.38, 0, 1, 0); pill.Position = UDim2.new(0.62, 0, 0, 0)
+        pill.BackgroundTransparency = 1; pill.Text = "?"
+        pill.TextScaled = false; pill.TextSize = 11; pill.Font = Enum.Font.GothamBold
+        pill.TextColor3 = C.muted; pill.TextXAlignment = Enum.TextXAlignment.Right
+        spacer(order + 0.5, 2)
+        return dot, pill
+    end
+
+    local emfDot,  emfPill  = makeEvidenceRow("EMF Level 5",  20)
+    local motDot,  motPill  = makeEvidenceRow("Motion",       21)
+    local orbDot,  orbPill  = makeEvidenceRow("Ghost Orbs",   22)
+    local fpDot,   fpPill   = makeEvidenceRow("Fingerprints", 23)
+    local bookDot, bookPill = makeEvidenceRow("Book",         24)
+
+    divider(25)
+    spacer(26, 8)
+
+    local traitRow = Instance.new("Frame", panel)
+    traitRow.Size             = UDim2.new(1, 0, 0, 28)
+    traitRow.BackgroundColor3 = Color3.fromRGB(40, 30, 10)
+    traitRow.BorderSizePixel  = 0
+    traitRow.LayoutOrder      = 27
+    Instance.new("UICorner", traitRow).CornerRadius = UDim.new(0, 8)
+    local traitStroke = Instance.new("UIStroke", traitRow)
+    traitStroke.Color = C.trait; traitStroke.Thickness = 1; traitStroke.Transparency = 0.5
+
+    local traitIcon = Instance.new("TextLabel", traitRow)
+    traitIcon.Size = UDim2.new(0, 22, 1, 0); traitIcon.Position = UDim2.new(0, 8, 0, 0)
+    traitIcon.BackgroundTransparency = 1; traitIcon.Text = "✦"
+    traitIcon.TextScaled = false; traitIcon.TextSize = 11; traitIcon.Font = Enum.Font.GothamBold
+    traitIcon.TextColor3 = C.trait; traitIcon.TextXAlignment = Enum.TextXAlignment.Center
+
+    local traitLabel = Instance.new("TextLabel", traitRow)
+    traitLabel.Size = UDim2.new(1, -30, 1, 0); traitLabel.Position = UDim2.new(0, 30, 0, 0)
+    traitLabel.BackgroundTransparency = 1; traitLabel.Text = "Trait: —"
+    traitLabel.TextScaled = false; traitLabel.TextSize = 11; traitLabel.Font = Enum.Font.GothamBold
+    traitLabel.TextColor3 = C.muted; traitLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    spacer(28, 6)
+
+    local speedRow = Instance.new("Frame", panel)
+    speedRow.Size = UDim2.new(1, 0, 0, 22); speedRow.BackgroundTransparency = 1
+    speedRow.LayoutOrder = 29
+
+    local speedIcon2 = Instance.new("TextLabel", speedRow)
+    speedIcon2.Size = UDim2.new(0, 16, 1, 0); speedIcon2.BackgroundTransparency = 1
+    speedIcon2.Text = "💨"; speedIcon2.TextScaled = false; speedIcon2.TextSize = 11
+    speedIcon2.Font = Enum.Font.Gotham; speedIcon2.TextXAlignment = Enum.TextXAlignment.Left
+
+    local speedVal = Instance.new("TextLabel", speedRow)
+    speedVal.Size = UDim2.new(1, -20, 1, 0); speedVal.Position = UDim2.new(0, 20, 0, 0)
+    speedVal.BackgroundTransparency = 1; speedVal.Text = "Speed: 0.0"
+    speedVal.TextScaled = false; speedVal.TextSize = 11; speedVal.Font = Enum.Font.GothamBold
+    speedVal.TextColor3 = C.accent; speedVal.TextXAlignment = Enum.TextXAlignment.Left
+
+    ------------------------------------------------
+    ------------------------------------------------
+
+    tpGhostBtn.MouseButton1Click:Connect(function()
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp  = char:WaitForChild("HumanoidRootPart")
+        local pos  = getPosition(ghost)
+        if not pos then return end
+        hrp.CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
+        workspace.CurrentCamera.CFrame =
+            CFrame.new(workspace.CurrentCamera.CFrame.Position, pos)
+    end)
+
+    collectBtn.MouseButton1Click:Connect(function()
+        if not bone then return end
+        local char    = player.Character or player.CharacterAdded:Wait()
+        local hrp     = char:WaitForChild("HumanoidRootPart")
+        local bonePos = getPosition(bone)
+        if not bonePos then return end
+        local old = hrp.CFrame
+        hrp.CFrame = CFrame.new(bonePos + Vector3.new(0, 4, 0))
+        task.wait(0.2)
+        workspace.CurrentCamera.CFrame =
+            CFrame.new(workspace.CurrentCamera.CFrame.Position, bonePos)
+        task.wait(0.2)
+        local prompt = bone:FindFirstChildWhichIsA("ProximityPrompt", true)
+        if prompt then pcall(fireproximityprompt, prompt) end
+        task.wait(0.3)
+        hrp.CFrame = old
+    end)
+
+    checkPMBtn.MouseButton1Click:Connect(function()
+        local ghostModel = workspace.NPCs:FindFirstChildOfClass("Model")
+        if not ghostModel then return end
+        local root = ghostModel:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+
+        local saved = {}
+        for _, grid in pairs(motions:GetDescendants()) do
+            if grid:IsA("Part") then
+                saved[grid] = grid.CFrame
+                grid.CFrame = root.CFrame
+            end
+        end
+
+        task.wait(0.15)  -- let game process overlap
+
+        local yesDetected = false
+        local noDetected  = false
+        for grid in pairs(saved) do
+            if grid:IsA("Part") then
+                if colorClose(grid.Color, COLOR_MOTION_YES) then
+                    yesDetected = true; break
+                elseif colorClose(grid.Color, COLOR_TOOTHPASTE) then
+                    noDetected = true
+                end
+            end
+        end
+
+        for part, cf in pairs(saved) do
+            part.CFrame = cf
+        end
+
+        if yesDetected then
+            confirmEvidence("motion", motDot, motPill)
+        elseif noDetected and not detectedEv["motion"] then
+            rejectEvidence("motion", motDot, motPill)
+        end
+    end)
+
+    tpVanBtn.MouseButton1Click:Connect(function()
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp  = char:WaitForChild("HumanoidRootPart")
+        local van  = workspace:FindFirstChild("Van")
+        if van and van.PrimaryPart then
+            hrp.CFrame = van.PrimaryPart.CFrame + Vector3.new(0, 5, 0)
+        end
+    end)
+
+    local infStamina = false
+    local staminaConn
+    staminaLbl.TextColor3 = C.no
+
+    staminaBtn.MouseButton1Click:Connect(function()
+        infStamina = not infStamina
+        if infStamina then
+            staminaLbl.Text       = "Inf Stamina  ON"
+            staminaLbl.TextColor3 = C.yes
+            if not staminaConn then
+                staminaConn = RunService.RenderStepped:Connect(function()
+                    player:SetAttribute("Stamina", 100)
+                end)
+            end
+        else
+            staminaLbl.Text       = "Inf Stamina"
+            staminaLbl.TextColor3 = C.text
+            if staminaConn then staminaConn:Disconnect(); staminaConn = nil end
+        end
+    end)
+
+    ------------------------------------------------
+    ------------------------------------------------
+
+    emfs.ChildAdded:Connect(function(e)
+        if e.Name == "EMF5" then confirmEvidence("emf", emfDot, emfPill) end
+    end)
+    fingerprints.ChildAdded:Connect(function()
+        confirmEvidence("fingerprints", fpDot, fpPill)
+    end)
+    orbs.ChildAdded:Connect(function()
+        confirmEvidence("orbs", orbDot, orbPill)
+    end)
+
+    task.delay(120, function()
+        if not detectedEv["emf"]          then rejectEvidence("emf",         emfDot, emfPill)  end
+        if not detectedEv["fingerprints"] then rejectEvidence("fingerprints", fpDot,  fpPill)  end
+        if not detectedEv["orbs"]         then rejectEvidence("orbs",         orbDot, orbPill) end
+    end)
+
+    task.spawn(function()
+        while true do
+            local yesDetected = false
+            local noDetected  = false
+            for _, motion in pairs(motions:GetDescendants()) do
+                if motion:IsA("Part") then
+                    if colorClose(motion.Color, COLOR_MOTION_YES) then
+                        yesDetected = true; break
+                    elseif colorClose(motion.Color, COLOR_TOOTHPASTE) then
+                        noDetected = true
+                    end
+                end
+            end
+            if yesDetected then
+                confirmEvidence("motion", motDot, motPill)
+            elseif noDetected and not detectedEv["motion"] then
+                rejectEvidence("motion", motDot, motPill)
+            end
+            task.wait(0.5)
+        end
+    end)
+
+    local function watchBook(book)
+        local function checkPages()
+            if detectedEv["book"] then return end
+            local left  = book:FindFirstChild("LeftPage")
+            local right = book:FindFirstChild("RightPage")
+            if (left and #left:GetChildren() > 0)
+            or (right and #right:GetChildren() > 0) then
+                confirmEvidence("book", bookDot, bookPill)
+            end
+        end
+        checkPages()
+        local function connectPage(page)
+            if not page then return end
+            page.ChildAdded:Connect(function()
+                confirmEvidence("book", bookDot, bookPill)
+            end)
+        end
+        connectPage(book:FindFirstChild("LeftPage"))
+        connectPage(book:FindFirstChild("RightPage"))
+        book.ChildAdded:Connect(function(child)
+            if child.Name == "LeftPage" or child.Name == "RightPage" then
+                connectPage(child); checkPages()
+            end
+        end)
+    end
+
+    for _, item in pairs(equipment:GetChildren()) do
+        if item.Name == "Book" then watchBook(item) end
+    end
+    equipment.ChildAdded:Connect(function(item)
+        if item.Name == "Book" then watchBook(item) end
+    end)
+    task.delay(180, function()
+        if not detectedEv["book"] then rejectEvidence("book", bookDot, bookPill) end
+    end)
+
+    local traitDetected = false
+    task.spawn(function()
+        local ghostBase = ghost:WaitForChild("Base")
+        local history = {}
+        local MAX = 8; local INTERVAL = 1.5; local FLIPS_REQ = 3
+        while not traitDetected do
+            local val = ghostBase.Transparency > 0.5 and 1 or 0
+            table.insert(history, val)
+            if #history > MAX then table.remove(history, 1) end
+            if #history >= MAX then
+                local flips = 0
+                for i = 2, #history do
+                    if history[i] ~= history[i-1] then flips += 1 end
+                end
+                if flips >= FLIPS_REQ then
+                    traitDetected = true
+                    traitLabel.Text       = "Trait: Flicker"
+                    traitLabel.TextColor3 = C.trait
+                    confirmEvidence("flicker", motDot, motPill)
+                end
+            end
+            task.wait(INTERVAL)
+        end
+    end)
+
+    local function checkForTrickster(model)
+        if traitDetected then return end
+        local main = model:FindFirstChild("Main")
+        if not main then return end
+        if main:FindFirstChildWhichIsA("BodyForce") then
+            traitDetected = true
+            traitLabel.Text       = "Trait: Trickster"
+            traitLabel.TextColor3 = C.trait
+            confirmEvidence("trickster", motDot, motPill)
+            return
+        end
+        main.ChildAdded:Connect(function(child)
+            if traitDetected then return end
+            if child:IsA("BodyForce") then
+                traitDetected = true
+                traitLabel.Text       = "Trait: Trickster"
+                traitLabel.TextColor3 = C.trait
+                confirmEvidence("trickster", motDot, motPill)
+            end
+        end)
+    end
+    for _, model in pairs(equipment:GetChildren()) do
+        if model:IsA("Model") then checkForTrickster(model) end
+    end
+    equipment.ChildAdded:Connect(function(child)
+        if traitDetected then return end
+        if child:IsA("Model") then checkForTrickster(child) end
+    end)
+
+    task.spawn(function()
+        while true do
+            local speed = ghost:GetAttribute("Speed") or 0
+            speedVal.Text = "Speed: " .. string.format("%.1f", speed)
+            if speed > maxSpeedSeen + 0.2 then
+                maxSpeedSeen = speed
+                updateGhostLabel()
+            elseif speed >= 12.0 then
+                updateGhostLabel()
+            end
+            task.wait(0.3)
+        end
+    end)
+
+    if bone then
+        local part = bone:IsA("BasePart") and bone
+            or bone:FindFirstChildWhichIsA("BasePart", true)
+        if part then
+            local esp = Instance.new("BillboardGui", part)
+            esp.Size = UDim2.new(0, 100, 0, 32); esp.AlwaysOnTop = true
+            esp.StudsOffset = Vector3.new(0, 3, 0)
+            local txt = Instance.new("TextLabel", esp)
+            txt.Size = UDim2.new(1, 0, 1, 0); txt.BackgroundTransparency = 1
+            txt.Text = "🦴 Bone"; txt.TextColor3 = C.yes
+            txt.TextScaled = false; txt.TextSize = 14; txt.Font = Enum.Font.GothamBold
+        end
+    end
+
+    local ghostESP
+    local function createGhostESP(part)
+        if ghostESP then ghostESP:Destroy() end
+        ghostESP = Instance.new("BillboardGui", part)
+        ghostESP.Size = UDim2.new(0, 130, 0, 36); ghostESP.AlwaysOnTop = true
+        ghostESP.StudsOffset = Vector3.new(0, 3, 0)
+        local txt = Instance.new("TextLabel", ghostESP)
+        txt.Size = UDim2.new(1, 0, 1, 0); txt.BackgroundTransparency = 1
+        txt.Text = "👻 Ghost"; txt.TextColor3 = C.no
+        txt.TextScaled = false; txt.TextSize = 14; txt.Font = Enum.Font.GothamBold
+    end
+    task.spawn(function()
+        while true do
+            local g = workspace.ServerNPCs:FindFirstChild("GLOBAL")
+            if g then
+                local part = g.PrimaryPart or g:FindFirstChildWhichIsA("BasePart")
+                if part and (not ghostESP or ghostESP.Adornee ~= part) then
+                    createGhostESP(part)
+                end
+            end
+            task.wait(1)
+        end
+    end)
+
+end -- end launchMainUI
+
+if KEY_ENABLED then
+    keyScreen.Visible = true
+else
+    keyScreen.Visible = false
+    launchMainUI()
+end
