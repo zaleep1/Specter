@@ -300,7 +300,7 @@ rejectEvidence = function(key, dot, pill)
     updateGhostLabel()
 end
 
-local KEY_ENABLED = true
+local KEY_ENABLED = false
 local GET_KEY_URL = "https://lootdest.org/s?SsiC5LyZ"
 local VALID_KEY   = "5G0HL1P7MXNZXWDJSA13ZAWDJAMWASD"
 local screenGui = Instance.new("ScreenGui")
