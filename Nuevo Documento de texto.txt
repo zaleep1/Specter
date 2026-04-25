@@ -1,0 +1,1536 @@
+local START_OFFSET_X = 0    -- suma/resta píxeles al centro X del botón
+local START_OFFSET_Y = 50    -- suma/resta píxeles al centro Y del botón
+-- ─────────────────────────────────────────────────────────────────────────────
+
+local Players             = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local RunService          = game:GetService("RunService")
+local TweenService        = game:GetService("TweenService")
+local UserInputService    = game:GetService("UserInputService")
+local Lighting            = game:GetService("Lighting")
+
+local player = Players.LocalPlayer
+
+-- ── Función de debug: muestra un dot rojo donde se hizo click, desaparece en 5s ──
+local function showClickDebug(screenX, screenY)
+    local pg = player:FindFirstChild("PlayerGui")
+    if not pg then return end
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "ClickDebug"; sg.ResetOnSpawn = false; sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    sg.Parent = pg
+
+    -- Dot rojo en la posición exacta del click
+    local dot = Instance.new("Frame", sg)
+    dot.Size = UDim2.new(0, 14, 0, 14)
+    dot.Position = UDim2.new(0, screenX - 7, 0, screenY - 7)
+    dot.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    dot.BorderSizePixel = 0
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+
+    -- Cruz para ver el centro exacto
+    local hLine = Instance.new("Frame", sg)
+    hLine.Size = UDim2.new(0, 30, 0, 2)
+    hLine.Position = UDim2.new(0, screenX - 15, 0, screenY - 1)
+    hLine.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    hLine.BorderSizePixel = 0
+
+    local vLine = Instance.new("Frame", sg)
+    vLine.Size = UDim2.new(0, 2, 0, 30)
+    vLine.Position = UDim2.new(0, screenX - 1, 0, screenY - 15)
+    vLine.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    vLine.BorderSizePixel = 0
+
+    -- Label con coordenadas
+    local lbl = Instance.new("TextLabel", sg)
+    lbl.Size = UDim2.new(0, 160, 0, 20)
+    lbl.Position = UDim2.new(0, screenX + 10, 0, screenY - 10)
+    lbl.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    lbl.BorderSizePixel = 0
+    lbl.Text = string.format("Click: %.0f, %.0f", screenX, screenY)
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 100)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextScaled = false; lbl.TextSize = 11
+    Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 4)
+
+    task.delay(5, function() sg:Destroy() end)
+end
+
+task.wait(8)
+
+do
+    local playerGui = player:WaitForChild("PlayerGui", 5)
+    local ok, startBtn = pcall(function()
+        return playerGui.Lobby.Frame.Content.BottomButtons.Start
+    end)
+    if ok and startBtn and startBtn:IsA("GuiObject") then
+        local abs = startBtn.AbsolutePosition
+        local sz  = startBtn.AbsoluteSize
+        local cx = abs.X + sz.X / 2 + START_OFFSET_X
+        local cy = abs.Y + sz.Y / 2 + START_OFFSET_Y
+        showClickDebug(cx, cy)
+        task.wait(0.1)
+        VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true,  game, 0)
+        task.wait(0.1)
+        VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 0)
+    else
+        task.spawn(function()
+            local function _getPos(inst)
+                if not inst then return end
+                if inst:IsA("BasePart") then return inst.Position end
+                if inst.PrimaryPart then return inst.PrimaryPart.Position end
+                local p = inst:FindFirstChildWhichIsA("BasePart", true)
+                if p then return p.Position end
+            end
+            local van = workspace:WaitForChild("Van", 15)
+            if not van then return end
+            local vanClose = van:FindFirstChild("Close")
+            local closePos = vanClose and _getPos(vanClose)
+            if not closePos and van.PrimaryPart then
+                closePos = van.PrimaryPart.Position + Vector3.new(0, 0, 3)
+            end
+            if not closePos then return end
+            local char = player.Character or player.CharacterAdded:Wait()
+            local hrp  = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            hrp.CFrame = CFrame.new(closePos + Vector3.new(0, 3, 3))
+            task.wait(0.2)
+            local cam = workspace.CurrentCamera
+            cam.CameraType = Enum.CameraType.Scriptable
+            cam.CFrame = CFrame.lookAt(cam.CFrame.Position, closePos)
+            task.wait(0.1)
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+            local deadline = tick() + 5
+            while tick() < deadline do
+                cam.CFrame = CFrame.lookAt(cam.CFrame.Position, closePos)
+                task.wait(0.05)
+            end
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+            cam.CameraType = Enum.CameraType.Custom
+        end)
+    end
+end
+
+-- ── Refs del mundo ────────────────────────────────────────────────────────────
+local map            = workspace:FindFirstChild("Map")
+local ghost          = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
+local evidenceFolder = workspace.Dynamic.Evidence
+local fingerprints   = evidenceFolder.Fingerprints
+local motions        = evidenceFolder.MotionGrids
+local orbs           = evidenceFolder.Orbs
+local emfs           = evidenceFolder.EMF
+local equipment      = workspace:WaitForChild("Equipment")
+local bone           = map and map:FindFirstChild("Bone")
+local npcGlobal      = workspace:WaitForChild("NPCs"):WaitForChild("GLOBAL")
+local ghostBase      = npcGlobal:WaitForChild("Base")
+
+local KEY_ENABLED = false
+local GET_KEY_URL = "https://lootdest.org/s?SsiC5LyZ"
+local VALID_KEY   = "5G0HL1P7MXNZXWDJSA13ZAWDJAMWASD"
+
+local C = {
+    bg       = Color3.fromRGB(12, 12, 14),
+    surface  = Color3.fromRGB(22, 22, 26),
+    border   = Color3.fromRGB(40, 40, 48),
+    accent   = Color3.fromRGB(130, 100, 255),
+    text     = Color3.fromRGB(220, 220, 230),
+    muted    = Color3.fromRGB(110, 110, 130),
+    yes      = Color3.fromRGB(80, 230, 140),
+    no       = Color3.fromRGB(230, 70,  80),
+    trait    = Color3.fromRGB(255, 190,  60),
+    btnHover = Color3.fromRGB(35, 35, 45),
+    ghost    = Color3.fromRGB(180, 140, 255),
+}
+
+local SPEED_TOL = 0.35
+
+-- ══════════════════════════════════════════════════════════════
+--  TABLA DE GHOSTS
+--  speedGroup: agrupa ghosts que comparten rango de velocidad
+--  para el sistema de descarte cruzado
+-- ══════════════════════════════════════════════════════════════
+local GHOSTS = {
+    -- ── FIJOS ÚNICOS ─────────────────────────────────────────────────────────
+    { name="Haint",    ev={"motion","orbs"},                              trait="tormentor",
+      speed={ base=23.4, min=22.8, max=24.0, pattern="fixed",
+              group="haint",   hint="Única: siempre ~23.4" } },
+    { name="Myling",   ev={"emf","motion"},                               trait=nil,
+      speed={ base=17.9, min=17.3, max=18.5, pattern="fixed",
+              group="myling",  hint="Única: siempre ~17.9" } },
+    { name="Blair",    ev={"emf"},                                        trait=nil,
+      speed={ base=13.8, min=13.3, max=14.3, pattern="fixed",
+              group="blair",   hint="Fija: siempre 13.8, nunca cambia" } },
+    { name="Duppy",    ev={"trickster","emf","orbs"},                     trait="trickster",
+      speed={ base=15.1, min=14.6, max=15.6, pattern="fixed",
+              group="15",      hint="Fija: siempre 15.1 (Duppy=EMF+Orbs)" } },
+    { name="Wendigo",  ev={"motion"},                                     trait="tormentor",
+      speed={ base=15.1, min=14.6, max=15.6, pattern="fixed",
+              group="15",      hint="Fija: siempre 15.1 (Wendigo=Motion)" } },
+    { name="O Tokata", ev={"emf","fingerprints","orbs"},                  trait=nil,
+      speed={ base=14.4, min=13.9, max=14.9, pattern="fixed",
+              group="tokata",  hint="Fija: siempre ~14.4" } },
+    -- ── PRETA ────────────────────────────────────────────────────────────────
+    { name="Preta",    ev={"motion","fingerprints"},                      trait=nil,
+      speed={ base=15.4, min=15.0, max=23.0, pattern="preta",
+              group="preta",   hint="Base 15.4+ único en ese rango" } },
+    -- ── SALTO ALTO ───────────────────────────────────────────────────────────
+    { name="Jinn",     ev={"flicker","emf","motion","orbs"},              trait="flicker",
+      speed={ base=12.4, min=12.0, max=22.5, pattern="instant_high",
+              group="jinn",    hint="12.4 → salta a ~22 de golpe" } },
+    -- ── SALTO MEDIO ──────────────────────────────────────────────────────────
+    { name="Yokai",    ev={"trickster","motion","fingerprints"},          trait="trickster",
+      speed={ base=13.8, min=13.3, max=17.5, pattern="instant_mid",
+              group="13_8",    hint="13.8 → salta a ~16.5 de golpe" } },
+    { name="Afarit",   ev={"motion","orbs"},                             trait="tormentor",
+      speed={ base=13.8, min=13.3, max=19.7, pattern="instant_mid",
+              group="13_8",    hint="13.8 → salta a ~19.3 viendo jugador" } },
+    { name="Mare",     ev={"flicker","orbs"},                            trait="flicker",
+      speed={ base=12.4, min=12.0, max=17.0, pattern="instant_mid",
+              group="12_4",    hint="12.4 → salta a ~16.5 de golpe" } },
+    -- ── GRADUAL ──────────────────────────────────────────────────────────────
+    { name="Demon",    ev={"flicker","book"},                            trait="flicker",
+      speed={ base=12.4, min=12.0, max=16.0, pattern="gradual",
+              group="12_4",    hint="12.4 sube 0.1+/s. Base=12.4→13.9 nunca" } },
+    { name="Thaye",    ev={"orbs","fingerprints"},                       trait="trickster",
+      speed={ base=13.8, min=13.3, max=17.5, pattern="gradual",
+              group="13_8",    hint="13.8 sube 0.1+/s. Base=13.8" } },
+    -- ── REVENANT ─────────────────────────────────────────────────────────────
+    { name="Revenant", ev={"emf","fingerprints","book"},                 trait="flicker",
+      speed={ base=12.4, min=12.0, max=18.3, pattern="rev",
+              group="12_4",    hint="12.4→13.8 siempre→17.9 viendo jugador" } },
+    -- ── WISP ─────────────────────────────────────────────────────────────────
+    { name="Wisp",     ev={"flicker","orbs","fingerprints","book"},      trait="flicker",
+      speed={ base=12.4, min=10.5, max=12.9, pattern="down",
+              group="12_4",    hint="Baja de 12.4 a ~11 durante hunt" } },
+    -- ── BOGEY ────────────────────────────────────────────────────────────────
+    { name="Bogey",    ev={"orbs","fingerprints","motion"},              trait=nil,
+      speed={ base=12.4, min=12.0, max=14.2, pattern="bogey",
+              group="12_4",    hint="12.4→13.8 máximo, no sube más" } },
+    -- ── BASE 12.4 ────────────────────────────────────────────────────────────
+    { name="Aswang",   ev={"emf","fingerprints"},      trait=nil,
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Banshee",  ev={"emf","fingerprints"},      trait="tormentor",
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Bhuta",    ev={"book","motion"},            trait=nil,
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Douen",    ev={"trickster","motion","fingerprints","book"}, trait="trickster",
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Egui",     ev={"orbs","book"},              trait="trickster",
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Mimic",    ev={"book","emf"},               trait=nil,
+      speed={ base=12.4, min=12.0, max=99.0, pattern="base", group="12_4", hint="Copia otro ghost" } },
+    { name="Oni",      ev={"motion","book"},            trait="tormentor",
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Phantom",  ev={"emf","orbs"},               trait=nil,
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Polter",   ev={"trickster","fingerprints","orbs"}, trait="trickster",
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Shade",    ev={"emf","book","orbs"},        trait=nil,
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Spirit",   ev={"flicker","book","fingerprints"}, trait="flicker",
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Upyr",     ev={"emf","motion"},             trait=nil,
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Wraith",   ev={"motion","book","emf"},      trait=nil,
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+    { name="Yurei",    ev={"book","orbs"},              trait="tormentor",
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+}
+
+-- ── Índice rápido por nombre ──────────────────────────────────────────────────
+local GHOST_BY_NAME = {}
+for _, g in ipairs(GHOSTS) do GHOST_BY_NAME[g.name] = g end
+
+local function getPosition(inst)
+    if not inst then return end
+    if inst:IsA("BasePart") then return inst.Position end
+    if inst.PrimaryPart then return inst.PrimaryPart.Position end
+    local p = inst:FindFirstChildWhichIsA("BasePart", true)
+    if p then return p.Position end
+end
+
+local function colorClose(c1, c2, tol)
+    tol = tol or 0.01
+    return math.abs(c1.R-c2.R)<tol and math.abs(c1.G-c2.G)<tol and math.abs(c1.B-c2.B)<tol
+end
+
+local COLOR_MOTION_YES = Color3.fromRGB(252, 52, 52)
+local COLOR_TOOTHPASTE = BrickColor.new("Toothpaste").Color
+
+-- ── Estado de velocidad ───────────────────────────────────────────────────────
+local speedHistory          = {}
+local HIST_MAX              = 30
+local minSpeedSeen          = 999
+local maxSpeedSeen          = 0
+local currentSpeedNow       = 0
+local firstSpeedReading     = nil
+local ghostConfirmedBySpeed = nil   -- "Demon" | "Thaye" | nil
+
+local function avgGradualDelta()
+    if #speedHistory < 4 then return 0 end
+    local totalDelta, totalTime = 0, 0
+    for i = 2, #speedHistory do
+        local dt = speedHistory[i].t - speedHistory[i-1].t
+        local ds = speedHistory[i].s - speedHistory[i-1].s
+        if dt > 0 and ds > 0 then totalDelta += ds; totalTime += dt end
+    end
+    if totalTime < 0.5 then return 0 end
+    return totalDelta / totalTime
+end
+
+local function maxInstantJump()
+    local maxJump = 0
+    for i = 2, #speedHistory do
+        local ds = speedHistory[i].s - speedHistory[i-1].s
+        if ds > maxJump then maxJump = ds end
+    end
+    return maxJump
+end
+
+local function hasFallenBelow(threshold)
+    return minSpeedSeen < threshold
+end
+
+-- Confirma Demon (12.4→12.5 gradual) o Thaye (13.8→13.9 gradual)
+local function checkGradualStart(currentSpeed)
+    if ghostConfirmedBySpeed then return ghostConfirmedBySpeed end
+    local grad = avgGradualDelta()
+    -- Thaye: inició en ~13.8, ya está en 13.9+ con incremento gradual
+    if currentSpeed >= 13.9 and currentSpeed < 15.0 and grad >= 0.04 then
+        if firstSpeedReading and firstSpeedReading.speed >= 13.4
+        and firstSpeedReading.speed <= 14.2 then
+            ghostConfirmedBySpeed = "Thaye"; return "Thaye"
+        end
+    end
+    -- Demon: inició en ~12.4, ya está en 12.5+ con incremento gradual
+    if firstSpeedReading then
+        local base = firstSpeedReading.speed
+        if base >= 12.0 and base <= 12.8 and currentSpeed >= 12.5
+        and currentSpeed < 13.4 and grad >= 0.04 then
+            ghostConfirmedBySpeed = "Demon"; return "Demon"
+        end
+    end
+    return nil
+end
+
+local function speedCouldMatch(g, currentSpeed)
+    local s = g.speed
+    local p = s.pattern
+    if currentSpeed < 11.5 then return true end
+    if ghostConfirmedBySpeed then return g.name == ghostConfirmedBySpeed end
+
+    if p == "fixed" then
+        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.base + SPEED_TOL)
+    end
+    if p == "preta" then
+        return currentSpeed >= 15.0 and currentSpeed <= 23.5
+    end
+    if p == "instant_high" then
+        if currentSpeed >= 20.0 then return true end
+        if maxInstantJump() >= 7.0 then return true end
+        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.base + SPEED_TOL + 1.5)
+    end
+    if p == "instant_mid" then
+        if maxInstantJump() >= 2.5 and currentSpeed >= 14.0 then return true end
+        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.base + SPEED_TOL + 1.5)
+    end
+    if p == "gradual" then
+        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.max + SPEED_TOL)
+    end
+    if p == "rev" then
+        if currentSpeed >= 17.5 then return true end
+        if currentSpeed >= 13.3 and currentSpeed <= 14.3 then return true end
+        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.base + SPEED_TOL)
+    end
+    if p == "down" then
+        if hasFallenBelow(11.8) then return true end
+        return currentSpeed >= 10.5 and currentSpeed <= 12.9
+    end
+    if p == "bogey" then
+        if currentSpeed > 14.5 then return false end
+        return currentSpeed >= 12.0 and currentSpeed <= 14.2
+    end
+    if p == "base" then
+        if currentSpeed > 14.5 then return false end
+        return currentSpeed >= 11.5 and currentSpeed <= 13.5
+    end
+    return true
+end
+
+local function speedTag(speed)
+    if speed < 11.5 then return "" end
+    local jump = maxInstantJump()
+    local grad = avgGradualDelta()
+    if ghostConfirmedBySpeed == "Demon" then return "🔴 gradual desde 12.4: DEMON confirmado" end
+    if ghostConfirmedBySpeed == "Thaye" then return "🔴 gradual desde 13.8: THAYE confirmado" end
+    if speed >= 22.5 then return "🔴 ~"..string.format("%.1f",speed)..": HAINT (único)" end
+    if jump >= 7.0 or (speed >= 20.0 and jump >= 3.0) then return "🔴 salto >20: JINN (único)" end
+    if speed >= 17.5 and speed <= 18.5 then return "🟡 ~17.9: MYLING (único)" end
+    if hasFallenBelow(11.8) then return "🔵 bajó a ~11: WISP (único)" end
+    if grad >= 0.06 and speed >= 14.5 then return "🟡 subiendo gradual: Demon o Thaye" end
+    if jump >= 2.5 and speed >= 15.5 then return "🟠 salto inst.: Afarit/Yokai/Mare" end
+    if speed >= 15.0 and speed <= 15.6 then return "🟢 ~15.1: Duppy o Wendigo" end
+    if speed >= 13.9 and speed <= 14.9 then return "🟣 ~14.4: O Tokata" end
+    if speed >= 13.3 and speed <= 14.3 then return "🔵 ~13.8: Blair/Afarit/Yokai/Thaye" end
+    if speed >= 12.0 and speed <= 12.9 then return "⚪ ~12.4: muchos posibles" end
+    return ""
+end
+
+-- ── Estado de evidencia y candidatos ─────────────────────────────────────────
+local detectedEv     = {}
+local rejectedEv     = {}
+local anyEvidence    = false
+local autoSubmitDone = false
+local detectedTrait  = nil
+
+local confirmEvidence, rejectEvidence
+local ghostNameLbl, ghostSpeedHint, ghostSpeedTagLbl
+local traitLabel
+
+-- ══════════════════════════════════════════════════════════════
+--  CÁLCULO DE CANDIDATOS — intersección speed + evidencia + trait
+--  Con lógica especial para descartes cruzados:
+--
+--  REGLAS DE DESCARTE CRUZADO:
+--  Si speed ~13.8 fija (no sube, no salta):
+--    → solo Blair (nunca cambia), descarta Yokai/Afarit/Thaye
+--  Si speed ~13.8 y luego saltó instantáneamente:
+--    → Yokai (→16.5) o Afarit (→19.3), descarta Blair/Thaye
+--  Si speed ~13.8 y subió gradual (Thaye confirmado):
+--    → solo Thaye, descarta Blair/Yokai/Afarit
+--  Si speed ~12.4 y subió gradual (Demon confirmado):
+--    → solo Demon, descarta Rev/Wisp/Bogey/base
+--  Si speed ~12.4 fija sin cambios tras 20s:
+--    → descarta Rev (que siempre pasa a 13.8) y Demon/Thaye (que suben)
+-- ══════════════════════════════════════════════════════════════
+local function calcCandidates()
+    local speedFiltering = currentSpeedNow >= 11.5
+
+    -- ── Filtro de velocidad ───────────────────────────────────────────────────
+    local speedSet = {}
+    if speedFiltering then
+        for _, g in ipairs(GHOSTS) do
+            if speedCouldMatch(g, currentSpeedNow) then
+                speedSet[g.name] = true
+            end
+        end
+    end
+
+    -- ── Filtro de evidencia ───────────────────────────────────────────────────
+    local evSet = {}
+    for _, g in ipairs(GHOSTS) do
+        local ok = true
+        -- rechazar si tiene evidencia descartada
+        for ev in pairs(rejectedEv) do
+            for _, gev in ipairs(g.ev) do
+                if gev == ev then ok = false; break end
+            end
+            if not ok then break end
+        end
+        -- requerir evidencias detectadas
+        if ok then
+            for ev in pairs(detectedEv) do
+                local has = false
+                for _, gev in ipairs(g.ev) do
+                    if gev == ev then has = true; break end
+                end
+                if not has then ok = false; break end
+            end
+        end
+        if ok then evSet[g.name] = true end
+    end
+
+    -- ── Intersección ─────────────────────────────────────────────────────────
+    local result = {}
+    for _, g in ipairs(GHOSTS) do
+        local passes
+        if speedFiltering and anyEvidence then
+            passes = speedSet[g.name] and evSet[g.name]
+        elseif speedFiltering then
+            passes = speedSet[g.name]
+        elseif anyEvidence then
+            passes = evSet[g.name]
+        else
+            passes = true
+        end
+
+        -- Filtro de trait
+        if passes and detectedTrait then
+            passes = (g.trait == detectedTrait)
+        end
+
+        if passes then table.insert(result, g.name) end
+    end
+
+    -- ══════════════════════════════════════════════════════════════
+    --  DESCARTES CRUZADOS ESPECIALES
+    --  Aplicar lógica adicional sobre la lista de candidatos
+    -- ══════════════════════════════════════════════════════════════
+    if speedFiltering and #result > 1 then
+        local speed = currentSpeedNow
+        local jump  = maxInstantJump()
+        local grad  = avgGradualDelta()
+        local elapsed = firstSpeedReading and (tick() - firstSpeedReading.time) or 0
+
+        -- ── Blair vs Yokai/Afarit/Thaye ────────────────────────────────────
+        -- Si hay Blair en candidatos: si la speed ya saltó o subió, descartamos Blair
+        -- Si la speed lleva tiempo fija en ~13.8 sin saltar ni subir, descartamos Yokai/Afarit/Thaye
+        local hasBlair  = false
+        local hasYokai  = false
+        local hasAfarit = false
+        local hasThaye  = false
+        local hasRev    = false
+        local hasDemon  = false
+        for _, n in ipairs(result) do
+            if n == "Blair"    then hasBlair  = true end
+            if n == "Yokai"    then hasYokai  = true end
+            if n == "Afarit"   then hasAfarit = true end
+            if n == "Thaye"    then hasThaye  = true end
+            if n == "Revenant" then hasRev    = true end
+            if n == "Demon"    then hasDemon  = true end
+        end
+
+        if hasBlair and (hasYokai or hasAfarit or hasThaye) then
+            if speed >= 13.3 and speed <= 14.3 then
+                if jump >= 2.5 then
+                    -- Saltó: no es Blair (fijo). Descartar Blair
+                    local filtered = {}
+                    for _, n in ipairs(result) do
+                        if n ~= "Blair" then table.insert(filtered, n) end
+                    end
+                    result = filtered
+                elseif grad >= 0.04 and elapsed >= 3 then
+                    -- Está subiendo gradual: no es Blair ni Yokai/Afarit (instantáneos)
+                    local filtered = {}
+                    for _, n in ipairs(result) do
+                        if n ~= "Blair" and n ~= "Yokai" and n ~= "Afarit" then
+                            table.insert(filtered, n)
+                        end
+                    end
+                    result = filtered
+                elseif elapsed >= 25 and jump < 0.5 and grad < 0.03 then
+                    -- Lleva 25s sin moverse: es Blair. Descartar Yokai/Afarit/Thaye
+                    local filtered = {}
+                    for _, n in ipairs(result) do
+                        if n ~= "Yokai" and n ~= "Afarit" and n ~= "Thaye" then
+                            table.insert(filtered, n)
+                        end
+                    end
+                    result = filtered
+                end
+            end
+        end
+
+        -- ── Revenant vs Demon/Wisp/Bogey en rango 12.4 ────────────────────
+        -- Rev siempre sube a 13.8 en algún momento.
+        -- Si llevamos 20s en 12.4 fijo, descartamos Rev (ya hubiera subido) y Demon/Thaye
+        if hasRev and elapsed >= 20 and speed >= 12.0 and speed <= 12.9
+        and jump < 0.4 and grad < 0.02 then
+            local filtered = {}
+            for _, n in ipairs(result) do
+                if n ~= "Revenant" and n ~= "Demon" and n ~= "Thaye" then
+                    table.insert(filtered, n)
+                end
+            end
+            result = filtered
+        end
+
+        -- ── Si hay Blair + Revenant: ambos en 13.8 ────────────────────────
+        -- Rev eventualmente salta a 17.9. Si speed ya está en 13.8 estable
+        -- y llevamos suficiente tiempo sin subir, es Blair (Rev hubiera saltado)
+        if hasBlair and hasRev and speed >= 13.3 and speed <= 14.3
+        and elapsed >= 30 and jump < 0.5 then
+            -- Rev llega a 17.9 al ver jugador. Si no saltó, puede ser Blair.
+            -- No descartamos aún: dejamos que el tiempo/salto lo confirme.
+            -- Pero si el bot ya hizo checkMotion (que acerca el fantasma), y no saltó:
+            -- poner como único Blair (heurística conservadora tras 30s)
+            local filtered = {}
+            for _, n in ipairs(result) do
+                if n ~= "Revenant" then table.insert(filtered, n) end
+            end
+            result = filtered
+        end
+    end
+
+    return result
+end
+
+local function hintFor(name)
+    local g = GHOST_BY_NAME[name]
+    return g and g.speed.hint or ""
+end
+
+-- ── Forward declarations ──────────────────────────────────────────────────────
+local autoSelectGhostAndSubmit
+
+local function updateGhostLabel()
+    if not ghostNameLbl then return end
+    if ghostSpeedTagLbl then ghostSpeedTagLbl.Text = speedTag(currentSpeedNow) end
+
+    local speedActive = currentSpeedNow >= 11.5
+    if not anyEvidence and not speedActive and not detectedTrait then
+        ghostNameLbl.Text       = "? candidates"
+        ghostNameLbl.TextColor3 = C.muted
+        if ghostSpeedHint then ghostSpeedHint.Text = "" end
+        return
+    end
+
+    local candidates = calcCandidates()
+
+    if #candidates == 0 then
+        ghostNameLbl.Text       = "No match"
+        ghostNameLbl.TextColor3 = C.no
+        if ghostSpeedHint then ghostSpeedHint.Text = "" end
+    elseif #candidates == 1 then
+        ghostNameLbl.Text       = candidates[1]
+        ghostNameLbl.TextColor3 = C.yes
+        if ghostSpeedHint then
+            ghostSpeedHint.Text       = hintFor(candidates[1])
+            ghostSpeedHint.TextColor3 = C.trait
+        end
+        autoSelectGhostAndSubmit(candidates[1])
+    elseif #candidates == 2 then
+        ghostNameLbl.Text       = candidates[1].." / "..candidates[2]
+        ghostNameLbl.TextColor3 = C.ghost
+        if ghostSpeedHint then
+            ghostSpeedHint.Text = candidates[1]..": "..hintFor(candidates[1])
+                .."  |  "..candidates[2]..": "..hintFor(candidates[2])
+            ghostSpeedHint.TextColor3 = C.trait
+        end
+    else
+        local joined = table.concat(candidates, " / ")
+        if #joined > 58 then joined = #candidates.." possible" end
+        ghostNameLbl.Text       = joined
+        ghostNameLbl.TextColor3 = C.ghost
+        if ghostSpeedHint then ghostSpeedHint.Text = "" end
+    end
+end
+
+local function setTrait(traitName)
+    if detectedTrait then return end
+    detectedTrait = traitName
+    if traitLabel then
+        local display = traitName:sub(1,1):upper()..traitName:sub(2)
+        traitLabel.Text       = "Trait: "..display
+        traitLabel.TextColor3 = C.trait
+    end
+    updateGhostLabel()
+end
+
+confirmEvidence = function(key, dot, pill)
+    if detectedEv[key] then return end
+    detectedEv[key] = true; anyEvidence = true
+    if dot and pill then
+        dot.BackgroundColor3 = C.yes; pill.Text = "YES"; pill.TextColor3 = C.yes
+    end
+    updateGhostLabel()
+end
+
+rejectEvidence = function(key, dot, pill)
+    if detectedEv[key] then return end
+    rejectedEv[key] = true
+    if dot and pill then
+        dot.BackgroundColor3 = C.no; pill.Text = "NO"; pill.TextColor3 = C.no
+    end
+    updateGhostLabel()
+end
+
+-- ── Input helpers ─────────────────────────────────────────────────────────────
+local function pressKey(keyCode)
+    VirtualInputManager:SendKeyEvent(true,  keyCode, false, game)
+    task.wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+end
+
+local function clickAt(cx, cy)
+    VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true,  game, 0)
+    task.wait(0.08)
+    VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 0)
+end
+
+local function countVotes(targetFrame)
+    local guesses = targetFrame:FindFirstChild("Guesses")
+    if not guesses then return 0 end
+    local count = 0
+    for _, child in ipairs(guesses:GetChildren()) do
+        if not child:IsA("UIGridLayout") then count += 1 end
+    end
+    return count
+end
+
+-- Obtiene el centro clickeable del frame del ghost en el journal
+-- Según la imagen: el frame es ImageButton con AbsolutePosition ya disponible
+local function getFrameClickPos(targetFrame)
+    local abs = targetFrame.AbsolutePosition
+    local sz  = targetFrame.AbsoluteSize
+    if abs.X > 0 and abs.Y > 0 then
+        -- Usar el centro del frame directamente (no hace falta ir al Box interno)
+        return abs.X + sz.X / 2, abs.Y + sz.Y / 2 + START_OFFSET_Y
+    end
+    return nil, nil
+end
+
+local function doTpAndHoldE(closePos)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp  = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    hrp.CFrame = CFrame.new(closePos + Vector3.new(0, 3, 3))
+    task.wait(0.2)
+    local cam = workspace.CurrentCamera
+    cam.CameraType = Enum.CameraType.Scriptable
+    cam.CFrame = CFrame.lookAt(cam.CFrame.Position, closePos)
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    local holdDeadline = tick() + 5
+    while tick() < holdDeadline do
+        cam.CFrame = CFrame.lookAt(cam.CFrame.Position, closePos)
+        task.wait(0.05)
+    end
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    cam.CameraType = Enum.CameraType.Custom
+end
+
+-- ── autoSelectGhostAndSubmit ──────────────────────────────────────────────────
+autoSelectGhostAndSubmit = function(ghostName)
+    if autoSubmitDone then return end
+    autoSubmitDone = true
+
+    task.spawn(function()
+        pressKey(Enum.KeyCode.J)
+
+        local playerGui = player:FindFirstChild("PlayerGui")
+        if not playerGui then return end
+
+        local ghostSel
+        local deadline = tick() + 8
+        while tick() < deadline do
+            local ok, result = pcall(function()
+                return playerGui.Journal.Frame.Frame.Selection.Evidence.Right.GhostSelection
+            end)
+            if ok and result then ghostSel = result; break end
+            task.wait(0.15)
+        end
+        if not ghostSel then return end
+
+        -- Buscar el frame del ghost por nombre
+        local targetFrame = nil
+        for _, child in ipairs(ghostSel:GetChildren()) do
+            if child.Name == ghostName then targetFrame = child; break end
+        end
+        if not targetFrame then return end
+
+        -- Esperar que el frame tenga posición válida
+        local posDeadline = tick() + 5
+        local cx, cy
+        while tick() < posDeadline do
+            cx, cy = getFrameClickPos(targetFrame)
+            if cx and cx > 10 and cy > 10 then break end
+            -- Intentar scroll hacia el frame si no es visible
+            task.wait(0.12)
+        end
+        if not cx or cx <= 10 then return end
+
+        task.wait(0.4)
+
+        -- Ciclo de voto: llevar a exactamente 1 voto
+        -- Cada click alterna: 0→1→2→1→... entonces:
+        -- Si votes==0: click una vez → 1 ✓
+        -- Si votes==1: ya listo
+        -- Si votes==2: click una vez → 1 ✓
+        -- Si votes==3+: click una vez → reduce
+
+        local MAX_TRIES = 15
+        for i = 1, MAX_TRIES do
+            local votes = countVotes(targetFrame)
+            if votes == 1 then break end
+            local ox, oy = getFrameClickPos(targetFrame)
+            if ox then clickAt(ox, oy) end
+            task.wait(0.5)
+        end
+
+        -- Verificación final
+        if countVotes(targetFrame) ~= 1 then
+            local ox, oy = getFrameClickPos(targetFrame)
+            if ox then clickAt(ox, oy); task.wait(0.6) end
+        end
+
+        local van = workspace:FindFirstChild("Van")
+        local vanClose = van and van:FindFirstChild("Close")
+        local closePos = vanClose and getPosition(vanClose)
+
+        pressKey(Enum.KeyCode.J)
+        task.wait(0.5)
+
+        if closePos then doTpAndHoldE(closePos) end
+    end)
+end
+
+-- ══════════════════════════════════════════════════════════════
+--  UI PRINCIPAL
+-- ══════════════════════════════════════════════════════════════
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name           = "GhostInfoUI_v17"
+screenGui.ResetOnSpawn   = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent         = player:WaitForChild("PlayerGui")
+
+-- ── KEY SCREEN ────────────────────────────────────────────────────────────────
+local keyScreen = Instance.new("Frame")
+keyScreen.Name = "KeyScreen"; keyScreen.Size = UDim2.new(1,0,1,0)
+keyScreen.BackgroundColor3 = Color3.fromRGB(8,8,10)
+keyScreen.BorderSizePixel = 0; keyScreen.ZIndex = 10; keyScreen.Parent = screenGui
+
+local keyCard = Instance.new("Frame", keyScreen)
+keyCard.Size = UDim2.new(0,280,0,200); keyCard.Position = UDim2.new(0.5,-140,0.5,-100)
+keyCard.BackgroundColor3 = C.bg; keyCard.BorderSizePixel = 0
+Instance.new("UICorner", keyCard).CornerRadius = UDim.new(0,16)
+local keyCardStroke = Instance.new("UIStroke", keyCard)
+keyCardStroke.Color = C.accent; keyCardStroke.Thickness = 1; keyCardStroke.Transparency = 0.4
+
+local function mkLbl(parent, txt, size, pos, font, sz2, color, align)
+    local lbl = Instance.new("TextLabel", parent)
+    lbl.Size = size; lbl.Position = pos; lbl.BackgroundTransparency = 1
+    lbl.Text = txt; lbl.Font = font or Enum.Font.Gotham
+    lbl.TextScaled = false; lbl.TextSize = sz2 or 11
+    lbl.TextColor3 = color or C.text
+    lbl.TextXAlignment = align or Enum.TextXAlignment.Center
+    return lbl
+end
+mkLbl(keyCard,"GHOST INFO — Key System",UDim2.new(1,-24,0,28),UDim2.new(0,12,0,14),Enum.Font.GothamBold,13)
+mkLbl(keyCard,"Enter your lifetime key to continue",UDim2.new(1,-24,0,16),UDim2.new(0,12,0,40),nil,10,C.muted)
+
+local keyBox = Instance.new("TextBox", keyCard)
+keyBox.Size = UDim2.new(1,-24,0,34); keyBox.Position = UDim2.new(0,12,0,66)
+keyBox.BackgroundColor3 = C.surface; keyBox.BorderSizePixel = 0
+keyBox.Text = ""; keyBox.PlaceholderText = "Paste key here..."
+keyBox.PlaceholderColor3 = C.muted; keyBox.TextColor3 = C.text
+keyBox.Font = Enum.Font.Gotham; keyBox.TextScaled = false; keyBox.TextSize = 11
+keyBox.ClearTextOnFocus = false
+Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0,8)
+local kbPad = Instance.new("UIPadding", keyBox)
+kbPad.PaddingLeft = UDim.new(0,10); kbPad.PaddingRight = UDim.new(0,10)
+local keyBoxStroke = Instance.new("UIStroke", keyBox)
+keyBoxStroke.Color = C.border; keyBoxStroke.Thickness = 1; keyBoxStroke.Transparency = 0.2
+
+local keyStatus = mkLbl(keyCard,"",UDim2.new(1,-24,0,14),UDim2.new(0,12,0,108),nil,10,C.no)
+
+local function makeKeyBtn(text, xPos, bgColor)
+    local btn = Instance.new("TextButton", keyCard)
+    btn.Size = UDim2.new(0,118,0,32); btn.Position = UDim2.new(0,xPos,0,152)
+    btn.BackgroundColor3 = bgColor; btn.BorderSizePixel = 0
+    btn.Text = text; btn.TextColor3 = C.text; btn.Font = Enum.Font.GothamBold
+    btn.TextScaled = false; btn.TextSize = 11; btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn,TweenInfo.new(0.12),{BackgroundColor3=bgColor:Lerp(Color3.new(1,1,1),0.12)}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn,TweenInfo.new(0.12),{BackgroundColor3=bgColor}):Play()
+    end)
+    return btn
+end
+local getLinkBtn  = makeKeyBtn("Get Lifetime Key", 12,  Color3.fromRGB(50,40,90))
+local checkKeyBtn = makeKeyBtn("Check Key",        142, Color3.fromRGB(40,80,50))
+
+getLinkBtn.MouseButton1Click:Connect(function()
+    setclipboard(GET_KEY_URL)
+    local orig = getLinkBtn.Text
+    getLinkBtn.Text = "Copied!"; getLinkBtn.TextColor3 = C.yes
+    task.delay(2, function() getLinkBtn.Text = orig; getLinkBtn.TextColor3 = C.text end)
+end)
+
+-- ══════════════════════════════════════════════════════════════
+--  MAIN UI
+-- ══════════════════════════════════════════════════════════════
+function launchMainUI()
+    local panel = Instance.new("Frame")
+    panel.Name = "Panel"; panel.Size = UDim2.new(0,228,0,680)
+    panel.Position = UDim2.new(1,-246,0.5,-340)
+    panel.BackgroundColor3 = C.bg; panel.BorderSizePixel = 0; panel.Parent = screenGui
+    Instance.new("UICorner",panel).CornerRadius = UDim.new(0,14)
+    local stroke = Instance.new("UIStroke",panel)
+    stroke.Color = C.border; stroke.Thickness = 1; stroke.Transparency = 0.4
+    local layout = Instance.new("UIListLayout",panel)
+    layout.Padding = UDim.new(0,0); layout.FillDirection = Enum.FillDirection.Vertical
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    local padding = Instance.new("UIPadding",panel)
+    padding.PaddingLeft = UDim.new(0,14); padding.PaddingRight = UDim.new(0,14)
+    padding.PaddingTop = UDim.new(0,14); padding.PaddingBottom = UDim.new(0,14)
+
+    do
+        local dragging, dragStart, panelStart = false, Vector2.new(), Vector2.new()
+        panel.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = Vector2.new(input.Position.X, input.Position.Y)
+                panelStart = Vector2.new(panel.Position.X.Offset, panel.Position.Y.Offset)
+            end
+        end)
+        panel.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+        end)
+        UserInputService.InputChanged:Connect(function(input)
+            if not dragging then return end
+            if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+                local delta = Vector2.new(input.Position.X,input.Position.Y) - dragStart
+                panel.Position = UDim2.new(0,panelStart.X+delta.X,0,panelStart.Y+delta.Y)
+            end
+        end)
+    end
+
+    local function spacer(order, h)
+        local sp = Instance.new("Frame",panel)
+        sp.Size = UDim2.new(1,0,0,h or 8); sp.BackgroundTransparency = 1; sp.LayoutOrder = order
+    end
+    local function divider(order)
+        local d = Instance.new("Frame",panel)
+        d.Size = UDim2.new(1,0,0,1); d.BackgroundColor3 = C.border
+        d.BorderSizePixel = 0; d.LayoutOrder = order
+    end
+
+    -- Header
+    local header = Instance.new("Frame",panel)
+    header.Size = UDim2.new(1,0,0,36); header.BackgroundTransparency = 1; header.LayoutOrder = 1
+    local tLbl = Instance.new("TextLabel",header)
+    tLbl.Size = UDim2.new(1,0,0.6,0); tLbl.BackgroundTransparency = 1
+    tLbl.Text = "GHOST  INFO"; tLbl.TextColor3 = C.text
+    tLbl.Font = Enum.Font.GothamBold; tLbl.TextScaled = false; tLbl.TextSize = 13
+    tLbl.TextXAlignment = Enum.TextXAlignment.Left
+    local sLbl = Instance.new("TextLabel",header)
+    sLbl.Size = UDim2.new(1,0,0.4,0); sLbl.Position = UDim2.new(0,0,0.6,0)
+    sLbl.BackgroundTransparency = 1; sLbl.Text = "Evidence tracker  v17"
+    sLbl.TextColor3 = C.muted; sLbl.Font = Enum.Font.Gotham
+    sLbl.TextScaled = false; sLbl.TextSize = 10; sLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+    divider(2); spacer(3,8)
+
+    -- Ghost box
+    local ghostBox = Instance.new("Frame",panel)
+    ghostBox.Size = UDim2.new(1,0,0,70); ghostBox.BackgroundColor3 = Color3.fromRGB(20,16,36)
+    ghostBox.BorderSizePixel = 0; ghostBox.LayoutOrder = 4
+    Instance.new("UICorner",ghostBox).CornerRadius = UDim.new(0,10)
+    local gStroke = Instance.new("UIStroke",ghostBox)
+    gStroke.Color = C.accent; gStroke.Thickness = 1; gStroke.Transparency = 0.5
+
+    mkLbl(ghostBox,"POSSIBLE GHOST",UDim2.new(1,-12,0,14),UDim2.new(0,8,0,4),
+          nil,9,C.muted,Enum.TextXAlignment.Left)
+
+    ghostNameLbl = Instance.new("TextLabel",ghostBox)
+    ghostNameLbl.Size = UDim2.new(1,-12,0,18); ghostNameLbl.Position = UDim2.new(0,8,0,17)
+    ghostNameLbl.BackgroundTransparency = 1; ghostNameLbl.Text = "? candidates"
+    ghostNameLbl.TextColor3 = C.muted; ghostNameLbl.Font = Enum.Font.GothamBold
+    ghostNameLbl.TextScaled = false; ghostNameLbl.TextSize = 13
+    ghostNameLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+    ghostSpeedHint = Instance.new("TextLabel",ghostBox)
+    ghostSpeedHint.Size = UDim2.new(1,-12,0,12); ghostSpeedHint.Position = UDim2.new(0,8,0,36)
+    ghostSpeedHint.BackgroundTransparency = 1; ghostSpeedHint.Text = ""
+    ghostSpeedHint.TextColor3 = C.trait; ghostSpeedHint.Font = Enum.Font.Gotham
+    ghostSpeedHint.TextScaled = false; ghostSpeedHint.TextSize = 9
+    ghostSpeedHint.TextXAlignment = Enum.TextXAlignment.Left
+
+    ghostSpeedTagLbl = Instance.new("TextLabel",ghostBox)
+    ghostSpeedTagLbl.Size = UDim2.new(1,-12,0,12); ghostSpeedTagLbl.Position = UDim2.new(0,8,0,52)
+    ghostSpeedTagLbl.BackgroundTransparency = 1; ghostSpeedTagLbl.Text = ""
+    ghostSpeedTagLbl.TextColor3 = C.accent; ghostSpeedTagLbl.Font = Enum.Font.Gotham
+    ghostSpeedTagLbl.TextScaled = false; ghostSpeedTagLbl.TextSize = 9
+    ghostSpeedTagLbl.TextXAlignment = Enum.TextXAlignment.Left
+
+    spacer(5,8); divider(6); spacer(7,8)
+
+    local function makeButton(icon, text, order)
+        local btn = Instance.new("TextButton",panel)
+        btn.Size = UDim2.new(1,0,0,36); btn.BackgroundColor3 = C.surface
+        btn.BorderSizePixel = 0; btn.AutoButtonColor = false; btn.Text = ""; btn.LayoutOrder = order
+        Instance.new("UICorner",btn).CornerRadius = UDim.new(0,9)
+        local ico = Instance.new("TextLabel",btn)
+        ico.Size = UDim2.new(0,24,1,0); ico.Position = UDim2.new(0,10,0,0)
+        ico.BackgroundTransparency = 1; ico.Text = icon; ico.TextScaled = false
+        ico.TextSize = 14; ico.Font = Enum.Font.Gotham; ico.TextColor3 = C.accent
+        ico.TextXAlignment = Enum.TextXAlignment.Center
+        local lbl = Instance.new("TextLabel",btn)
+        lbl.Size = UDim2.new(1,-44,1,0); lbl.Position = UDim2.new(0,38,0,0)
+        lbl.BackgroundTransparency = 1; lbl.Text = text; lbl.TextScaled = false
+        lbl.TextSize = 12; lbl.Font = Enum.Font.GothamBold; lbl.TextColor3 = C.text
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn,TweenInfo.new(0.15),{BackgroundColor3=C.btnHover}):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn,TweenInfo.new(0.15),{BackgroundColor3=C.surface}):Play()
+        end)
+        spacer(order+0.5,5)
+        return btn, lbl
+    end
+
+    local tpGhostBtn, _           = makeButton("👻","TP to Ghost",  10)
+    local collectBtn,  _          = makeButton("🦴","Collect Bone", 11)
+    local checkPMBtn,  _          = makeButton("📡","Check Motion", 12)
+    local tpVanBtn,    _          = makeButton("🚐","TP to Van",    13)
+    local staminaBtn,  staminaLbl = makeButton("⚡","Inf Stamina",  14)
+
+    -- ── DEBUG: botón para mostrar offsets del click ───────────────────────────
+    local debugBtn, debugLbl = makeButton("🎯","Click Debug OFF", 15)
+    local debugMode = false
+    debugBtn.MouseButton1Click:Connect(function()
+        debugMode = not debugMode
+        debugLbl.Text = debugMode and "Click Debug ON" or "Click Debug OFF"
+        debugLbl.TextColor3 = debugMode and C.yes or C.text
+    end)
+
+    divider(16); spacer(17,8)
+
+    local function makeEvidenceRow(name, order)
+        local row = Instance.new("Frame",panel)
+        row.Size = UDim2.new(1,0,0,24); row.BackgroundTransparency = 1; row.LayoutOrder = order
+        local dot = Instance.new("Frame",row)
+        dot.Size = UDim2.new(0,8,0,8); dot.Position = UDim2.new(0,0,0.5,-4)
+        dot.BackgroundColor3 = C.muted; dot.BorderSizePixel = 0
+        Instance.new("UICorner",dot).CornerRadius = UDim.new(1,0)
+        local nLbl = Instance.new("TextLabel",row)
+        nLbl.Size = UDim2.new(0.62,-16,1,0); nLbl.Position = UDim2.new(0,18,0,0)
+        nLbl.BackgroundTransparency = 1; nLbl.Text = name
+        nLbl.TextScaled = false; nLbl.TextSize = 11; nLbl.Font = Enum.Font.Gotham
+        nLbl.TextColor3 = C.text; nLbl.TextXAlignment = Enum.TextXAlignment.Left
+        local pill = Instance.new("TextLabel",row)
+        pill.Size = UDim2.new(0.38,0,1,0); pill.Position = UDim2.new(0.62,0,0,0)
+        pill.BackgroundTransparency = 1; pill.Text = "?"
+        pill.TextScaled = false; pill.TextSize = 11; pill.Font = Enum.Font.GothamBold
+        pill.TextColor3 = C.muted; pill.TextXAlignment = Enum.TextXAlignment.Right
+        spacer(order+0.5,2)
+        return dot, pill
+    end
+
+    local emfDot,  emfPill  = makeEvidenceRow("EMF Level 5",  20)
+    local motDot,  motPill  = makeEvidenceRow("Motion",       21)
+    local orbDot,  orbPill  = makeEvidenceRow("Ghost Orbs",   22)
+    local fpDot,   fpPill   = makeEvidenceRow("Fingerprints", 23)
+    local bookDot, bookPill = makeEvidenceRow("Book",         24)
+
+    divider(25); spacer(26,8)
+
+    -- Trait row
+    local traitRow = Instance.new("Frame",panel)
+    traitRow.Size = UDim2.new(1,0,0,28); traitRow.BackgroundColor3 = Color3.fromRGB(40,30,10)
+    traitRow.BorderSizePixel = 0; traitRow.LayoutOrder = 27
+    Instance.new("UICorner",traitRow).CornerRadius = UDim.new(0,8)
+    local tStroke = Instance.new("UIStroke",traitRow)
+    tStroke.Color = C.trait; tStroke.Thickness = 1; tStroke.Transparency = 0.5
+    local tIcon = Instance.new("TextLabel",traitRow)
+    tIcon.Size = UDim2.new(0,22,1,0); tIcon.Position = UDim2.new(0,8,0,0)
+    tIcon.BackgroundTransparency = 1; tIcon.Text = "✦"
+    tIcon.TextScaled = false; tIcon.TextSize = 11; tIcon.Font = Enum.Font.GothamBold
+    tIcon.TextColor3 = C.trait; tIcon.TextXAlignment = Enum.TextXAlignment.Center
+    traitLabel = Instance.new("TextLabel",traitRow)
+    traitLabel.Size = UDim2.new(1,-30,1,0); traitLabel.Position = UDim2.new(0,30,0,0)
+    traitLabel.BackgroundTransparency = 1; traitLabel.Text = "Trait: —"
+    traitLabel.TextScaled = false; traitLabel.TextSize = 11; traitLabel.Font = Enum.Font.GothamBold
+    traitLabel.TextColor3 = C.muted; traitLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    spacer(28,6)
+
+    local speedRow = Instance.new("Frame",panel)
+    speedRow.Size = UDim2.new(1,0,0,22); speedRow.BackgroundTransparency = 1; speedRow.LayoutOrder = 29
+    local speedIcon2 = Instance.new("TextLabel",speedRow)
+    speedIcon2.Size = UDim2.new(0,16,1,0); speedIcon2.BackgroundTransparency = 1
+    speedIcon2.Text = "💨"; speedIcon2.TextScaled = false; speedIcon2.TextSize = 11
+    speedIcon2.Font = Enum.Font.Gotham; speedIcon2.TextXAlignment = Enum.TextXAlignment.Left
+    local speedVal = Instance.new("TextLabel",speedRow)
+    speedVal.Size = UDim2.new(1,-20,1,0); speedVal.Position = UDim2.new(0,20,0,0)
+    speedVal.BackgroundTransparency = 1; speedVal.Text = "Speed: 0.0"
+    speedVal.TextScaled = false; speedVal.TextSize = 11; speedVal.Font = Enum.Font.GothamBold
+    speedVal.TextColor3 = C.accent; speedVal.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- ── Interceptar clicks para modo debug ───────────────────────────────────
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not debugMode then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            showClickDebug(input.Position.X, input.Position.Y)
+        end
+    end)
+
+    -- ── BOTONES ───────────────────────────────────────────────────────────────
+    tpGhostBtn.MouseButton1Click:Connect(function()
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp  = char:WaitForChild("HumanoidRootPart")
+        local pos  = getPosition(ghost)
+        if not pos then return end
+        hrp.CFrame = CFrame.new(pos + Vector3.new(0,5,0))
+        workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, pos)
+    end)
+
+    collectBtn.MouseButton1Click:Connect(function()
+        if not bone then return end
+        task.spawn(function()
+            local char    = player.Character or player.CharacterAdded:Wait()
+            local hrp     = char:WaitForChild("HumanoidRootPart")
+            local bonePos = getPosition(bone)
+            if not bonePos then return end
+            hrp.CFrame = CFrame.new(bonePos + Vector3.new(0,4,0))
+            task.wait(0.2)
+            workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, bonePos)
+            task.wait(0.2)
+            local prompt = bone:FindFirstChildWhichIsA("ProximityPrompt", true)
+            if prompt then pcall(fireproximityprompt, prompt) end
+            task.wait(0.5)
+            -- Vigilar si el ghost se acerca (<10 studs → TP a la van)
+            local watchDeadline = tick() + 15
+            while tick() < watchDeadline do
+                local ghostPos  = getPosition(ghost)
+                local playerPos = hrp and hrp.Position
+                if ghostPos and playerPos and (ghostPos - playerPos).Magnitude < 10 then
+                    local van = workspace:FindFirstChild("Van")
+                    if van and van.PrimaryPart then
+                        hrp.CFrame = van.PrimaryPart.CFrame + Vector3.new(0,5,0)
+                    end
+                    break
+                end
+                task.wait(0.3)
+            end
+        end)
+    end)
+
+    local function runCheckMotion(mDot, mPill)
+        local gm = workspace.NPCs and workspace.NPCs:FindFirstChildOfClass("Model")
+        if not gm then return end
+        local gr = gm:FindFirstChild("HumanoidRootPart")
+        if not gr then return end
+        local sg   = motions:FindFirstChild("SensorGrid")
+        local src  = sg and sg:GetChildren() or motions:GetDescendants()
+        local saved = {}
+        for _, grid in pairs(src) do
+            if grid:IsA("Part") then
+                saved[grid] = grid.CFrame
+                grid.CFrame = gr.CFrame + Vector3.new(1,0,0)
+            end
+        end
+        task.wait(0.3)
+        local yes, no = false, false
+        for _, grid in pairs(src) do
+            if grid:IsA("Part") then
+                if colorClose(grid.Color, COLOR_MOTION_YES) then yes = true; break
+                elseif colorClose(grid.Color, COLOR_TOOTHPASTE) then no = true end
+            end
+        end
+        for part, cf in pairs(saved) do part.CFrame = cf end
+        if yes then confirmEvidence("motion", mDot, mPill)
+        elseif no and not detectedEv["motion"] then rejectEvidence("motion", mDot, mPill) end
+    end
+
+    checkPMBtn.MouseButton1Click:Connect(function()
+        runCheckMotion(motDot, motPill)
+    end)
+
+    tpVanBtn.MouseButton1Click:Connect(function()
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp  = char:WaitForChild("HumanoidRootPart")
+        local van  = workspace:FindFirstChild("Van")
+        if van and van.PrimaryPart then hrp.CFrame = van.PrimaryPart.CFrame + Vector3.new(0,5,0) end
+    end)
+
+    local infStamina = false; local staminaConn
+    staminaLbl.TextColor3 = C.no
+    staminaBtn.MouseButton1Click:Connect(function()
+        infStamina = not infStamina
+        if infStamina then
+            staminaLbl.Text = "Inf Stamina  ON"; staminaLbl.TextColor3 = C.yes
+            if not staminaConn then
+                staminaConn = RunService.RenderStepped:Connect(function()
+                    player:SetAttribute("Stamina", 100)
+                end)
+            end
+        else
+            staminaLbl.Text = "Inf Stamina"; staminaLbl.TextColor3 = C.text
+            if staminaConn then staminaConn:Disconnect(); staminaConn = nil end
+        end
+    end)
+
+    -- ── EVIDENCIA AUTOMÁTICA ──────────────────────────────────────────────────
+    emfs.ChildAdded:Connect(function(e)
+        if e.Name == "EMF5" then confirmEvidence("emf", emfDot, emfPill) end
+    end)
+    fingerprints.ChildAdded:Connect(function()
+        confirmEvidence("fingerprints", fpDot, fpPill)
+    end)
+    orbs.ChildAdded:Connect(function()
+        confirmEvidence("orbs", orbDot, orbPill)
+    end)
+
+    task.delay(120, function()
+        if not detectedEv["emf"]          then rejectEvidence("emf",         emfDot, emfPill)  end
+        if not detectedEv["fingerprints"] then rejectEvidence("fingerprints", fpDot,  fpPill)  end
+        if not detectedEv["orbs"]         then rejectEvidence("orbs",         orbDot, orbPill) end
+    end)
+
+    -- ── LOOP MOTION ───────────────────────────────────────────────────────────
+    task.spawn(function()
+        while true do
+            local yes, no = false, false
+            local sg  = motions:FindFirstChild("SensorGrid")
+            local src = sg and sg:GetChildren() or motions:GetDescendants()
+            for _, motion in pairs(src) do
+                if motion:IsA("Part") then
+                    if colorClose(motion.Color, COLOR_MOTION_YES) then yes = true; break
+                    elseif colorClose(motion.Color, COLOR_TOOTHPASTE) then no = true end
+                end
+            end
+            if yes then confirmEvidence("motion", motDot, motPill)
+            elseif no and not detectedEv["motion"] then rejectEvidence("motion", motDot, motPill) end
+            task.wait(0.5)
+        end
+    end)
+
+    -- Check motion automático cada 5s mientras no se detecte
+    task.spawn(function()
+        while not detectedEv["motion"] do
+            task.wait(5)
+            if detectedEv["motion"] then break end
+            runCheckMotion(motDot, motPill)
+        end
+    end)
+
+    -- ── BOOK ──────────────────────────────────────────────────────────────────
+    local function watchBook(book)
+        local function checkPages()
+            if detectedEv["book"] then return end
+            local left  = book:FindFirstChild("LeftPage")
+            local right = book:FindFirstChild("RightPage")
+            if (left and #left:GetChildren()>0) or (right and #right:GetChildren()>0) then
+                confirmEvidence("book", bookDot, bookPill)
+            end
+        end
+        checkPages()
+        local function connectPage(page)
+            if not page then return end
+            page.ChildAdded:Connect(function() confirmEvidence("book", bookDot, bookPill) end)
+        end
+        connectPage(book:FindFirstChild("LeftPage"))
+        connectPage(book:FindFirstChild("RightPage"))
+        book.ChildAdded:Connect(function(child)
+            if child.Name == "LeftPage" or child.Name == "RightPage" then
+                connectPage(child); checkPages()
+            end
+        end)
+    end
+    for _, item in pairs(equipment:GetChildren()) do
+        if item.Name == "Book" then watchBook(item) end
+    end
+    equipment.ChildAdded:Connect(function(item)
+        if item.Name == "Book" then watchBook(item) end
+    end)
+    task.delay(180, function()
+        if not detectedEv["book"] then rejectEvidence("book", bookDot, bookPill) end
+    end)
+
+    -- ── TRAIT: FLICKER ────────────────────────────────────────────────────────
+    task.spawn(function()
+        local startTime = tick()
+        local conn
+        conn = RunService.Heartbeat:Connect(function()
+            if detectedTrait then conn:Disconnect(); return end
+            if tick() - startTime > 20 then conn:Disconnect(); return end
+            if ghostBase.Transparency <= 0.05 then
+                conn:Disconnect(); setTrait("flicker")
+            end
+        end)
+    end)
+
+    -- ── TRAIT: TORMENTOR ──────────────────────────────────────────────────────
+    task.spawn(function()
+        local tormentor = Lighting:FindFirstChild("Tormentor")
+        if not tormentor then tormentor = Lighting:WaitForChild("Tormentor", 30) end
+        if not tormentor then return end
+        local function checkT()
+            if detectedTrait then return end
+            if tormentor.Enabled == true then setTrait("tormentor") end
+        end
+        checkT()
+        tormentor:GetPropertyChangedSignal("Enabled"):Connect(checkT)
+    end)
+
+    -- ── TRAIT: TRICKSTER ──────────────────────────────────────────────────────
+    task.spawn(function()
+        local function checkForTrickster(model)
+            if detectedTrait then return end
+            local main = model:FindFirstChild("Main")
+            if not main then return end
+            if main:FindFirstChildWhichIsA("BodyForce") then setTrait("trickster"); return end
+            main.ChildAdded:Connect(function(child)
+                if detectedTrait then return end
+                if child:IsA("BodyForce") then setTrait("trickster") end
+            end)
+        end
+        for _, model in pairs(equipment:GetChildren()) do
+            if model:IsA("Model") then checkForTrickster(model) end
+        end
+        equipment.ChildAdded:Connect(function(child)
+            if detectedTrait then return end
+            if child:IsA("Model") then checkForTrickster(child) end
+        end)
+    end)
+
+    -- ── SPEED TRACKING + descarte continuo ───────────────────────────────────
+    task.spawn(function()
+        while true do
+            local speed = ghost:GetAttribute("Speed") or 0
+            speedVal.Text = "Speed: "..string.format("%.1f", speed)
+            if speed >= 11.0 then
+                if not firstSpeedReading then
+                    firstSpeedReading = { speed = speed, time = tick() }
+                end
+                table.insert(speedHistory, { s = speed, t = tick() })
+                if #speedHistory > HIST_MAX then table.remove(speedHistory, 1) end
+                if speed > maxSpeedSeen then maxSpeedSeen = speed end
+                if speed < minSpeedSeen then minSpeedSeen = speed end
+                currentSpeedNow = speed
+                checkGradualStart(speed)
+                updateGhostLabel()
+            end
+            task.wait(0.3)
+        end
+    end)
+
+    -- ── Descarte continuo cada 1s (re-evalúa aunque no cambie speed) ──────────
+    -- Importante para los descartes basados en tiempo (Blair, Rev, etc.)
+    task.spawn(function()
+        while true do
+            task.wait(1)
+            if currentSpeedNow >= 11.5 then
+                updateGhostLabel()
+            end
+        end
+    end)
+
+    -- ── ESP BONE ──────────────────────────────────────────────────────────────
+    if bone then
+        local part = bone:IsA("BasePart") and bone or bone:FindFirstChildWhichIsA("BasePart",true)
+        if part then
+            local esp = Instance.new("BillboardGui",part)
+            esp.Size = UDim2.new(0,100,0,32); esp.AlwaysOnTop = true; esp.StudsOffset = Vector3.new(0,3,0)
+            local txt = Instance.new("TextLabel",esp)
+            txt.Size = UDim2.new(1,0,1,0); txt.BackgroundTransparency = 1
+            txt.Text = "🦴 Bone"; txt.TextColor3 = C.yes
+            txt.TextScaled = false; txt.TextSize = 14; txt.Font = Enum.Font.GothamBold
+        end
+    end
+
+    -- ── ESP GHOST ─────────────────────────────────────────────────────────────
+    local ghostESP
+    local function createGhostESP(part)
+        if ghostESP then ghostESP:Destroy() end
+        ghostESP = Instance.new("BillboardGui",part)
+        ghostESP.Size = UDim2.new(0,130,0,36); ghostESP.AlwaysOnTop = true
+        ghostESP.StudsOffset = Vector3.new(0,3,0)
+        local txt = Instance.new("TextLabel",ghostESP)
+        txt.Size = UDim2.new(1,0,1,0); txt.BackgroundTransparency = 1
+        txt.Text = "👻 Ghost"; txt.TextColor3 = C.no
+        txt.TextScaled = false; txt.TextSize = 14; txt.Font = Enum.Font.GothamBold
+    end
+    task.spawn(function()
+        while true do
+            local g = workspace.ServerNPCs:FindFirstChild("GLOBAL")
+            if g then
+                local part = g.PrimaryPart or g:FindFirstChildWhichIsA("BasePart")
+                if part and (not ghostESP or ghostESP.Adornee ~= part) then createGhostESP(part) end
+            end
+            task.wait(1)
+        end
+    end)
+end
+
+-- ── Helpers de pickup ─────────────────────────────────────────────────────────
+local function pickupWithPrompt(model)
+    if not model then return false end
+    local prompt = model:FindFirstChildWhichIsA("ProximityPrompt", true)
+    if not prompt then return false end
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp  = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    local pos = getPosition(model)
+    if not pos then return false end
+    hrp.CFrame = CFrame.new(pos + Vector3.new(0,3,2))
+    task.wait(0.2)
+    local cam = workspace.CurrentCamera
+    cam.CameraType = Enum.CameraType.Scriptable
+    cam.CFrame = CFrame.lookAt(cam.CFrame.Position, pos)
+    task.wait(0.15)
+    pcall(fireproximityprompt, prompt)
+    task.wait(0.1)
+    local pressKeyLocal = function(keyCode)
+        VirtualInputManager:SendKeyEvent(true,  keyCode, false, game)
+        task.wait(0.05)
+        VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+    end
+    pressKeyLocal(Enum.KeyCode.F)
+    cam.CameraType = Enum.CameraType.Custom
+    return true
+end
+
+local function waitForDisappear(model, timeout)
+    local deadline = tick() + timeout
+    while tick() < deadline do
+        if not model or not model.Parent then return true end
+        task.wait(0.15)
+    end
+    return false
+end
+
+local function placeItemNearGhost(slot)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp  = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local ghostPos = getPosition(ghost)
+    if not ghostPos then return end
+    hrp.CFrame = CFrame.new(ghostPos + Vector3.new(3,0,3))
+    task.wait(0.2)
+    local cam = workspace.CurrentCamera
+    cam.CameraType = Enum.CameraType.Scriptable
+    cam.CFrame = CFrame.lookAt(cam.CFrame.Position, hrp.Position + Vector3.new(0,-2,0))
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(true,  slot, false, game)
+    task.wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, slot, false, game)
+    task.wait(0.3)
+    local vp = workspace.CurrentCamera.ViewportSize
+    VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, true,  game, 0)
+    task.wait(0.08)
+    VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, false, game, 0)
+    cam.CameraType = Enum.CameraType.Custom
+end
+
+-- ── Rutina de inicio ──────────────────────────────────────────────────────────
+local function initialPickupRoutine()
+    task.spawn(function()
+        task.wait(1)
+        local van = workspace:WaitForChild("Van", 10)
+        if not van then return end
+        local vanEquip = van:FindFirstChild("Equipment")
+        if not vanEquip then return end
+
+        local book = vanEquip:FindFirstChild("Book")
+        if book then pickupWithPrompt(book); waitForDisappear(book, 5) end
+
+        local motionSensor = vanEquip:FindFirstChild("Motion Sensor")
+        if motionSensor then pickupWithPrompt(motionSensor); waitForDisappear(motionSensor, 5) end
+
+        task.wait(0.3)
+        placeItemNearGhost(Enum.KeyCode.One)
+        task.wait(2)
+        placeItemNearGhost(Enum.KeyCode.Two)
+        task.wait(10)
+
+        -- Acercarse al ghost y mirar 3s
+        local ghostPos = getPosition(ghost)
+        if ghostPos then
+            local char = player.Character or player.CharacterAdded:Wait()
+            local hrp  = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = CFrame.new(ghostPos + Vector3.new(0,5,3))
+                task.wait(0.15)
+                local cam = workspace.CurrentCamera
+                cam.CameraType = Enum.CameraType.Scriptable
+                local lookDeadline = tick() + 3
+                while tick() < lookDeadline do
+                    local gp = getPosition(ghost)
+                    if gp then cam.CFrame = CFrame.lookAt(cam.CFrame.Position, gp) end
+                    task.wait(0.05)
+                end
+                cam.CameraType = Enum.CameraType.Custom
+                task.wait(0.1)
+            end
+        end
+
+        -- Check motion
+        local ghostModel = workspace.NPCs and workspace.NPCs:FindFirstChildOfClass("Model")
+        if ghostModel then
+            local ghostRoot = ghostModel:FindFirstChild("HumanoidRootPart")
+            if ghostRoot then
+                local sg = motions:FindFirstChild("SensorGrid")
+                if sg then
+                    local saved = {}
+                    for _, grid in pairs(sg:GetChildren()) do
+                        if grid:IsA("Part") then
+                            saved[grid] = grid.CFrame
+                            grid.CFrame = ghostRoot.CFrame + Vector3.new(1,0,0)
+                        end
+                    end
+                    task.wait(0.3)
+                    for part, cf in pairs(saved) do part.CFrame = cf end
+                end
+            end
+        end
+
+        -- Collect bone + vigilar ghost
+        if bone then
+            local bonePos = getPosition(bone)
+            if bonePos then
+                local char = player.Character or player.CharacterAdded:Wait()
+                local hrp  = char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CFrame = CFrame.new(bonePos + Vector3.new(0,4,0))
+                    task.wait(0.2)
+                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, bonePos)
+                    task.wait(0.2)
+                    local prompt = bone:FindFirstChildWhichIsA("ProximityPrompt", true)
+                    if prompt then pcall(fireproximityprompt, prompt) end
+                    task.wait(0.5)
+                    local watchDeadline = tick() + 15
+                    while tick() < watchDeadline do
+                        local gPos = getPosition(ghost)
+                        local pPos = hrp and hrp.Position
+                        if gPos and pPos and (gPos - pPos).Magnitude < 10 then
+                            local v = workspace:FindFirstChild("Van")
+                            if v and v.PrimaryPart then hrp.CFrame = v.PrimaryPart.CFrame + Vector3.new(0,5,0) end
+                            break
+                        end
+                        task.wait(0.3)
+                    end
+                end
+            end
+        end
+
+        -- Volver a la van
+        local v  = workspace:FindFirstChild("Van")
+        local sp = v and v:FindFirstChild("Spawn")
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp  = char:FindFirstChild("HumanoidRootPart")
+        if hrp and sp then
+            local spPos = getPosition(sp)
+            if spPos then hrp.CFrame = CFrame.new(spPos + Vector3.new(0,3,0)) end
+        end
+    end)
+end
+
+-- ── Key check y arranque ──────────────────────────────────────────────────────
+checkKeyBtn.MouseButton1Click:Connect(function()
+    local entered = keyBox.Text:gsub("%s+", "")
+    if entered == VALID_KEY then
+        TweenService:Create(keyScreen, TweenInfo.new(0.4), {BackgroundTransparency=1}):Play()
+        task.wait(0.3)
+        for _, d in ipairs(keyScreen:GetDescendants()) do
+            if d:IsA("GuiObject") then pcall(function() d.Visible = false end) end
+        end
+        keyScreen.Visible = false
+        initialPickupRoutine()
+        launchMainUI()
+    else
+        keyStatus.Text = "Invalid key. Try again."; keyStatus.TextColor3 = C.no
+        TweenService:Create(keyBox, TweenInfo.new(0.08, Enum.EasingStyle.Bounce),
+            {BackgroundColor3=Color3.fromRGB(60,20,20)}):Play()
+        task.delay(0.4, function()
+            TweenService:Create(keyBox, TweenInfo.new(0.2), {BackgroundColor3=C.surface}):Play()
+        end)
+    end
+end)
+
+if KEY_ENABLED then
+    task.delay(6, function() keyScreen.Visible = true end)
+else
+    keyScreen.Visible = false
+    task.delay(6, function()
+        initialPickupRoutine()
+        launchMainUI()
+    end)
+end
