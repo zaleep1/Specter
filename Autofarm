@@ -55,7 +55,7 @@ local function showClickDebug(screenX, screenY)
     task.delay(5, function() sg:Destroy() end)
 end
 
-task.wait(8)
+task.wait(4)
 
 do
     local playerGui = player:WaitForChild("PlayerGui", 5)
