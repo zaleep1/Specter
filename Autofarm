@@ -1,6 +1,5 @@
-local START_OFFSET_X = 0    -- suma/resta píxeles al centro X del botón
-local START_OFFSET_Y = 50    -- suma/resta píxeles al centro Y del botón
--- ─────────────────────────────────────────────────────────────────────────────
+local START_OFFSET_X = 0
+local START_OFFSET_Y = 50
 
 local Players             = game:GetService("Players")
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -11,51 +10,53 @@ local Lighting            = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 
--- ── Función de debug: muestra un dot rojo donde se hizo click, desaparece en 5s ──
+if player:GetAttribute("GhostScriptRunning") == true then return end
+player:SetAttribute("GhostScriptRunning", true)
+
+local GHOST_IDENTIFIED = false
+local IDENTIFIED_NAME  = nil
+
 local function showClickDebug(screenX, screenY)
     local pg = player:FindFirstChild("PlayerGui")
     if not pg then return end
     local sg = Instance.new("ScreenGui")
-    sg.Name = "ClickDebug"; sg.ResetOnSpawn = false; sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.Parent = pg
-
-    -- Dot rojo en la posición exacta del click
+    sg.Name = "ClickDebug"; sg.ResetOnSpawn = false
+    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling; sg.Parent = pg
     local dot = Instance.new("Frame", sg)
-    dot.Size = UDim2.new(0, 14, 0, 14)
-    dot.Position = UDim2.new(0, screenX - 7, 0, screenY - 7)
-    dot.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
-    dot.BorderSizePixel = 0
-    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
-
-    -- Cruz para ver el centro exacto
+    dot.Size = UDim2.new(0,14,0,14)
+    dot.Position = UDim2.new(0, screenX-7, 0, screenY-7)
+    dot.BackgroundColor3 = Color3.fromRGB(255,50,50); dot.BorderSizePixel = 0
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1,0)
     local hLine = Instance.new("Frame", sg)
-    hLine.Size = UDim2.new(0, 30, 0, 2)
-    hLine.Position = UDim2.new(0, screenX - 15, 0, screenY - 1)
-    hLine.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-    hLine.BorderSizePixel = 0
-
+    hLine.Size = UDim2.new(0,30,0,2); hLine.Position = UDim2.new(0,screenX-15,0,screenY-1)
+    hLine.BackgroundColor3 = Color3.fromRGB(255,200,0); hLine.BorderSizePixel = 0
     local vLine = Instance.new("Frame", sg)
-    vLine.Size = UDim2.new(0, 2, 0, 30)
-    vLine.Position = UDim2.new(0, screenX - 1, 0, screenY - 15)
-    vLine.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-    vLine.BorderSizePixel = 0
-
-    -- Label con coordenadas
+    vLine.Size = UDim2.new(0,2,0,30); vLine.Position = UDim2.new(0,screenX-1,0,screenY-15)
+    vLine.BackgroundColor3 = Color3.fromRGB(255,200,0); vLine.BorderSizePixel = 0
     local lbl = Instance.new("TextLabel", sg)
-    lbl.Size = UDim2.new(0, 160, 0, 20)
-    lbl.Position = UDim2.new(0, screenX + 10, 0, screenY - 10)
-    lbl.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    lbl.BorderSizePixel = 0
+    lbl.Size = UDim2.new(0,160,0,20)
+    lbl.Position = UDim2.new(0,screenX+10,0,screenY-10)
+    lbl.BackgroundColor3 = Color3.fromRGB(20,20,20); lbl.BorderSizePixel = 0
     lbl.Text = string.format("Click: %.0f, %.0f", screenX, screenY)
-    lbl.TextColor3 = Color3.fromRGB(255, 255, 100)
-    lbl.Font = Enum.Font.GothamBold
-    lbl.TextScaled = false; lbl.TextSize = 11
-    Instance.new("UICorner", lbl).CornerRadius = UDim.new(0, 4)
-
+    lbl.TextColor3 = Color3.fromRGB(255,255,100)
+    lbl.Font = Enum.Font.GothamBold; lbl.TextScaled = false; lbl.TextSize = 11
+    Instance.new("UICorner", lbl).CornerRadius = UDim.new(0,4)
     task.delay(5, function() sg:Destroy() end)
 end
 
-task.wait(4)
+local queueteleport = queue_on_teleport
+    or (syn and syn.queue_on_teleport)
+    or (fluxus and fluxus.queue_on_teleport)
+
+if queueteleport then
+    game:GetService("Players").LocalPlayer.OnTeleport:Connect(function(state)
+        if state == Enum.TeleportState.Started then
+            queueteleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/zaleep1/Specter/refs/heads/main/Autofarm"))()')
+        end
+    end)
+end
+
+task.wait(0.2)
 
 do
     local playerGui = player:WaitForChild("PlayerGui", 5)
@@ -65,8 +66,8 @@ do
     if ok and startBtn and startBtn:IsA("GuiObject") then
         local abs = startBtn.AbsolutePosition
         local sz  = startBtn.AbsoluteSize
-        local cx = abs.X + sz.X / 2 + START_OFFSET_X
-        local cy = abs.Y + sz.Y / 2 + START_OFFSET_Y
+        local cx = abs.X + sz.X/2 + START_OFFSET_X
+        local cy = abs.Y + sz.Y/2 + START_OFFSET_Y
         showClickDebug(cx, cy)
         task.wait(0.1)
         VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true,  game, 0)
@@ -86,13 +87,13 @@ do
             local vanClose = van:FindFirstChild("Close")
             local closePos = vanClose and _getPos(vanClose)
             if not closePos and van.PrimaryPart then
-                closePos = van.PrimaryPart.Position + Vector3.new(0, 0, 3)
+                closePos = van.PrimaryPart.Position + Vector3.new(0,0,3)
             end
             if not closePos then return end
             local char = player.Character or player.CharacterAdded:Wait()
             local hrp  = char:FindFirstChild("HumanoidRootPart")
             if not hrp then return end
-            hrp.CFrame = CFrame.new(closePos + Vector3.new(0, 3, 3))
+            hrp.CFrame = CFrame.new(closePos + Vector3.new(0,3,3))
             task.wait(0.2)
             local cam = workspace.CurrentCamera
             cam.CameraType = Enum.CameraType.Scriptable
@@ -110,7 +111,6 @@ do
     end
 end
 
--- ── Refs del mundo ────────────────────────────────────────────────────────────
 local map            = workspace:FindFirstChild("Map")
 local ghost          = workspace:WaitForChild("ServerNPCs"):WaitForChild("GLOBAL")
 local evidenceFolder = workspace.Dynamic.Evidence
@@ -143,100 +143,69 @@ local C = {
 
 local SPEED_TOL = 0.35
 
--- ══════════════════════════════════════════════════════════════
---  TABLA DE GHOSTS
---  speedGroup: agrupa ghosts que comparten rango de velocidad
---  para el sistema de descarte cruzado
--- ══════════════════════════════════════════════════════════════
 local GHOSTS = {
-    -- ── FIJOS ÚNICOS ─────────────────────────────────────────────────────────
     { name="Haint",    ev={"motion","orbs"},                              trait="tormentor",
-      speed={ base=23.4, min=22.8, max=24.0, pattern="fixed",
-              group="haint",   hint="Única: siempre ~23.4" } },
+      speed={ base=23.4, min=22.8, max=24.0, pattern="fixed",   hint="Única: siempre ~23.4" } },
     { name="Myling",   ev={"emf","motion"},                               trait=nil,
-      speed={ base=17.9, min=17.3, max=18.5, pattern="fixed",
-              group="myling",  hint="Única: siempre ~17.9" } },
+      speed={ base=17.9, min=17.3, max=18.5, pattern="fixed",   hint="Única: siempre ~17.9" } },
     { name="Blair",    ev={"emf"},                                        trait=nil,
-      speed={ base=13.8, min=13.3, max=14.3, pattern="fixed",
-              group="blair",   hint="Fija: siempre 13.8, nunca cambia" } },
+      speed={ base=13.8, min=13.3, max=14.3, pattern="fixed",   hint="Fija: siempre 13.8" } },
     { name="Duppy",    ev={"trickster","emf","orbs"},                     trait="trickster",
-      speed={ base=15.1, min=14.6, max=15.6, pattern="fixed",
-              group="15",      hint="Fija: siempre 15.1 (Duppy=EMF+Orbs)" } },
+      speed={ base=15.1, min=14.6, max=15.6, pattern="fixed",   hint="Fija: siempre 15.1" } },
     { name="Wendigo",  ev={"motion"},                                     trait="tormentor",
-      speed={ base=15.1, min=14.6, max=15.6, pattern="fixed",
-              group="15",      hint="Fija: siempre 15.1 (Wendigo=Motion)" } },
+      speed={ base=15.1, min=14.6, max=15.6, pattern="fixed",   hint="Fija: siempre 15.1" } },
     { name="O Tokata", ev={"emf","fingerprints","orbs"},                  trait=nil,
-      speed={ base=14.4, min=13.9, max=14.9, pattern="fixed",
-              group="tokata",  hint="Fija: siempre ~14.4" } },
-    -- ── PRETA ────────────────────────────────────────────────────────────────
+      speed={ base=14.4, min=13.9, max=14.9, pattern="fixed",   hint="Fija: siempre ~14.4" } },
     { name="Preta",    ev={"motion","fingerprints"},                      trait=nil,
-      speed={ base=15.4, min=15.0, max=23.0, pattern="preta",
-              group="preta",   hint="Base 15.4+ único en ese rango" } },
-    -- ── SALTO ALTO ───────────────────────────────────────────────────────────
+      speed={ base=15.4, min=15.0, max=23.0, pattern="preta",   hint="Base 15.4+ único en ese rango" } },
     { name="Jinn",     ev={"flicker","emf","motion","orbs"},              trait="flicker",
-      speed={ base=12.4, min=12.0, max=22.5, pattern="instant_high",
-              group="jinn",    hint="12.4 → salta a ~22 de golpe" } },
-    -- ── SALTO MEDIO ──────────────────────────────────────────────────────────
+      speed={ base=12.4, min=12.0, max=22.5, pattern="instant_high", hint="12.4 → salta a ~22 de golpe" } },
     { name="Yokai",    ev={"trickster","motion","fingerprints"},          trait="trickster",
-      speed={ base=13.8, min=13.3, max=17.5, pattern="instant_mid",
-              group="13_8",    hint="13.8 → salta a ~16.5 de golpe" } },
+      speed={ base=13.8, min=13.3, max=17.5, pattern="instant_mid", hint="13.8 → salta a ~16.5 de golpe" } },
     { name="Afarit",   ev={"motion","orbs"},                             trait="tormentor",
-      speed={ base=13.8, min=13.3, max=19.7, pattern="instant_mid",
-              group="13_8",    hint="13.8 → salta a ~19.3 viendo jugador" } },
+      speed={ base=13.8, min=13.3, max=19.7, pattern="instant_mid", hint="13.8 → salta a ~19.3 viendo jugador" } },
     { name="Mare",     ev={"flicker","orbs"},                            trait="flicker",
-      speed={ base=12.4, min=12.0, max=17.0, pattern="instant_mid",
-              group="12_4",    hint="12.4 → salta a ~16.5 de golpe" } },
-    -- ── GRADUAL ──────────────────────────────────────────────────────────────
+      speed={ base=12.4, min=12.0, max=17.0, pattern="instant_mid", hint="12.4 → salta a ~16.5 de golpe" } },
     { name="Demon",    ev={"flicker","book"},                            trait="flicker",
-      speed={ base=12.4, min=12.0, max=16.0, pattern="gradual",
-              group="12_4",    hint="12.4 sube 0.1+/s. Base=12.4→13.9 nunca" } },
+      speed={ base=12.4, min=12.0, max=16.0, pattern="gradual",  hint="12.4 sube 0.1+/s sin parar" } },
     { name="Thaye",    ev={"orbs","fingerprints"},                       trait="trickster",
-      speed={ base=13.8, min=13.3, max=17.5, pattern="gradual",
-              group="13_8",    hint="13.8 sube 0.1+/s. Base=13.8" } },
-    -- ── REVENANT ─────────────────────────────────────────────────────────────
+      speed={ base=13.8, min=13.3, max=17.5, pattern="gradual",  hint="13.8 sube 0.1+/s sin parar" } },
     { name="Revenant", ev={"emf","fingerprints","book"},                 trait="flicker",
-      speed={ base=12.4, min=12.0, max=18.3, pattern="rev",
-              group="12_4",    hint="12.4→13.8 siempre→17.9 viendo jugador" } },
-    -- ── WISP ─────────────────────────────────────────────────────────────────
+      speed={ base=12.4, min=12.0, max=18.3, pattern="rev",      hint="12.4 → 13.8 → 17.9 viendo jugador" } },
     { name="Wisp",     ev={"flicker","orbs","fingerprints","book"},      trait="flicker",
-      speed={ base=12.4, min=10.5, max=12.9, pattern="down",
-              group="12_4",    hint="Baja de 12.4 a ~11 durante hunt" } },
-    -- ── BOGEY ────────────────────────────────────────────────────────────────
+      speed={ base=12.4, min=10.5, max=12.9, pattern="down",     hint="Baja de 12.4 a ~11 durante hunt" } },
     { name="Bogey",    ev={"orbs","fingerprints","motion"},              trait=nil,
-      speed={ base=12.4, min=12.0, max=14.2, pattern="bogey",
-              group="12_4",    hint="12.4→13.8 máximo, no sube más" } },
-    -- ── BASE 12.4 ────────────────────────────────────────────────────────────
+      speed={ base=12.4, min=12.0, max=14.2, pattern="bogey",    hint="12.4 → 13.8 máximo" } },
     { name="Aswang",   ev={"emf","fingerprints"},      trait=nil,
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Banshee",  ev={"emf","fingerprints"},      trait="tormentor",
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Bhuta",    ev={"book","motion"},            trait=nil,
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Douen",    ev={"trickster","motion","fingerprints","book"}, trait="trickster",
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Egui",     ev={"orbs","book"},              trait="trickster",
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Mimic",    ev={"book","emf"},               trait=nil,
-      speed={ base=12.4, min=12.0, max=99.0, pattern="base", group="12_4", hint="Copia otro ghost" } },
+      speed={ base=12.4, min=12.0, max=99.0, pattern="base", hint="Copia otro ghost" } },
     { name="Oni",      ev={"motion","book"},            trait="tormentor",
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Phantom",  ev={"emf","orbs"},               trait=nil,
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
-    { name="Polter",   ev={"trickster","fingerprints","orbs"}, trait="trickster",
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
+    { name="Poltergeist", ev={"trickster","fingerprints","orbs"}, trait="trickster",
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Shade",    ev={"emf","book","orbs"},        trait=nil,
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Spirit",   ev={"flicker","book","fingerprints"}, trait="flicker",
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Upyr",     ev={"emf","motion"},             trait=nil,
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Wraith",   ev={"motion","book","emf"},      trait=nil,
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
     { name="Yurei",    ev={"book","orbs"},              trait="tormentor",
-      speed={ base=12.4, min=12.0, max=12.9, pattern="base", group="12_4", hint="~12.4 base" } },
+      speed={ base=12.4, min=12.0, max=12.9, pattern="base", hint="~12.4 base" } },
 }
 
--- ── Índice rápido por nombre ──────────────────────────────────────────────────
 local GHOST_BY_NAME = {}
 for _, g in ipairs(GHOSTS) do GHOST_BY_NAME[g.name] = g end
 
@@ -256,14 +225,30 @@ end
 local COLOR_MOTION_YES = Color3.fromRGB(252, 52, 52)
 local COLOR_TOOTHPASTE = BrickColor.new("Toothpaste").Color
 
--- ── Estado de velocidad ───────────────────────────────────────────────────────
+-- ── TP seguro: reintenta si el jugador cae lejos del objetivo ─────────────────
+local function safeTp(targetPos, offset, maxAttempts)
+    offset = offset or Vector3.new(0, 3, 0)
+    maxAttempts = maxAttempts or 3
+    local dest = targetPos + offset
+    for _ = 1, maxAttempts do
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp  = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then break end
+        hrp.CFrame = CFrame.new(dest)
+        task.wait(0.15)
+        -- Verificar que llegó: si está a más de 8 studs, reintentar
+        local actualPos = hrp.Position
+        if (actualPos - dest).Magnitude < 8 then break end
+    end
+end
+
 local speedHistory          = {}
 local HIST_MAX              = 30
 local minSpeedSeen          = 999
 local maxSpeedSeen          = 0
 local currentSpeedNow       = 0
 local firstSpeedReading     = nil
-local ghostConfirmedBySpeed = nil   -- "Demon" | "Thaye" | nil
+local ghostConfirmedBySpeed = nil
 
 local function avgGradualDelta()
     if #speedHistory < 4 then return 0 end
@@ -290,18 +275,15 @@ local function hasFallenBelow(threshold)
     return minSpeedSeen < threshold
 end
 
--- Confirma Demon (12.4→12.5 gradual) o Thaye (13.8→13.9 gradual)
 local function checkGradualStart(currentSpeed)
     if ghostConfirmedBySpeed then return ghostConfirmedBySpeed end
     local grad = avgGradualDelta()
-    -- Thaye: inició en ~13.8, ya está en 13.9+ con incremento gradual
     if currentSpeed >= 13.9 and currentSpeed < 15.0 and grad >= 0.04 then
         if firstSpeedReading and firstSpeedReading.speed >= 13.4
         and firstSpeedReading.speed <= 14.2 then
             ghostConfirmedBySpeed = "Thaye"; return "Thaye"
         end
     end
-    -- Demon: inició en ~12.4, ya está en 12.5+ con incremento gradual
     if firstSpeedReading then
         local base = firstSpeedReading.speed
         if base >= 12.0 and base <= 12.8 and currentSpeed >= 12.5
@@ -313,33 +295,29 @@ local function checkGradualStart(currentSpeed)
 end
 
 local function speedCouldMatch(g, currentSpeed)
-    local s = g.speed
-    local p = s.pattern
+    local s = g.speed; local p = s.pattern
     if currentSpeed < 11.5 then return true end
     if ghostConfirmedBySpeed then return g.name == ghostConfirmedBySpeed end
-
     if p == "fixed" then
-        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.base + SPEED_TOL)
+        return currentSpeed >= (s.base-SPEED_TOL) and currentSpeed <= (s.base+SPEED_TOL)
     end
-    if p == "preta" then
-        return currentSpeed >= 15.0 and currentSpeed <= 23.5
-    end
+    if p == "preta" then return currentSpeed >= 15.0 and currentSpeed <= 23.5 end
     if p == "instant_high" then
         if currentSpeed >= 20.0 then return true end
         if maxInstantJump() >= 7.0 then return true end
-        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.base + SPEED_TOL + 1.5)
+        return currentSpeed >= (s.base-SPEED_TOL) and currentSpeed <= (s.base+SPEED_TOL+1.5)
     end
     if p == "instant_mid" then
         if maxInstantJump() >= 2.5 and currentSpeed >= 14.0 then return true end
-        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.base + SPEED_TOL + 1.5)
+        return currentSpeed >= (s.base-SPEED_TOL) and currentSpeed <= (s.base+SPEED_TOL+1.5)
     end
     if p == "gradual" then
-        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.max + SPEED_TOL)
+        return currentSpeed >= (s.base-SPEED_TOL) and currentSpeed <= (s.max+SPEED_TOL)
     end
     if p == "rev" then
         if currentSpeed >= 17.5 then return true end
         if currentSpeed >= 13.3 and currentSpeed <= 14.3 then return true end
-        return currentSpeed >= (s.base - SPEED_TOL) and currentSpeed <= (s.base + SPEED_TOL)
+        return currentSpeed >= (s.base-SPEED_TOL) and currentSpeed <= (s.base+SPEED_TOL)
     end
     if p == "down" then
         if hasFallenBelow(11.8) then return true end
@@ -358,8 +336,7 @@ end
 
 local function speedTag(speed)
     if speed < 11.5 then return "" end
-    local jump = maxInstantJump()
-    local grad = avgGradualDelta()
+    local jump = maxInstantJump(); local grad = avgGradualDelta()
     if ghostConfirmedBySpeed == "Demon" then return "🔴 gradual desde 12.4: DEMON confirmado" end
     if ghostConfirmedBySpeed == "Thaye" then return "🔴 gradual desde 13.8: THAYE confirmado" end
     if speed >= 22.5 then return "🔴 ~"..string.format("%.1f",speed)..": HAINT (único)" end
@@ -375,58 +352,41 @@ local function speedTag(speed)
     return ""
 end
 
--- ── Estado de evidencia y candidatos ─────────────────────────────────────────
 local detectedEv     = {}
 local rejectedEv     = {}
 local anyEvidence    = false
 local autoSubmitDone = false
 local detectedTrait  = nil
+local rejectedTraits = {}
 
 local confirmEvidence, rejectEvidence
 local ghostNameLbl, ghostSpeedHint, ghostSpeedTagLbl
 local traitLabel
 
 -- ══════════════════════════════════════════════════════════════
---  CÁLCULO DE CANDIDATOS — intersección speed + evidencia + trait
---  Con lógica especial para descartes cruzados:
---
---  REGLAS DE DESCARTE CRUZADO:
---  Si speed ~13.8 fija (no sube, no salta):
---    → solo Blair (nunca cambia), descarta Yokai/Afarit/Thaye
---  Si speed ~13.8 y luego saltó instantáneamente:
---    → Yokai (→16.5) o Afarit (→19.3), descarta Blair/Thaye
---  Si speed ~13.8 y subió gradual (Thaye confirmado):
---    → solo Thaye, descarta Blair/Yokai/Afarit
---  Si speed ~12.4 y subió gradual (Demon confirmado):
---    → solo Demon, descarta Rev/Wisp/Bogey/base
---  Si speed ~12.4 fija sin cambios tras 20s:
---    → descarta Rev (que siempre pasa a 13.8) y Demon/Thaye (que suben)
+-- calcCandidates: SIEMPRE intersección estricta speed ∩ evidencia
 -- ══════════════════════════════════════════════════════════════
 local function calcCandidates()
     local speedFiltering = currentSpeedNow >= 11.5
 
-    -- ── Filtro de velocidad ───────────────────────────────────────────────────
+    -- Lista por velocidad
     local speedSet = {}
     if speedFiltering then
         for _, g in ipairs(GHOSTS) do
-            if speedCouldMatch(g, currentSpeedNow) then
-                speedSet[g.name] = true
-            end
+            if speedCouldMatch(g, currentSpeedNow) then speedSet[g.name] = true end
         end
     end
 
-    -- ── Filtro de evidencia ───────────────────────────────────────────────────
+    -- Lista por evidencia
     local evSet = {}
     for _, g in ipairs(GHOSTS) do
         local ok = true
-        -- rechazar si tiene evidencia descartada
         for ev in pairs(rejectedEv) do
             for _, gev in ipairs(g.ev) do
                 if gev == ev then ok = false; break end
             end
             if not ok then break end
         end
-        -- requerir evidencias detectadas
         if ok then
             for ev in pairs(detectedEv) do
                 local has = false
@@ -439,118 +399,24 @@ local function calcCandidates()
         if ok then evSet[g.name] = true end
     end
 
-    -- ── Intersección ─────────────────────────────────────────────────────────
+    -- Intersección: ambas listas siempre activas cuando hay datos
     local result = {}
     for _, g in ipairs(GHOSTS) do
-        local passes
-        if speedFiltering and anyEvidence then
-            passes = speedSet[g.name] and evSet[g.name]
-        elseif speedFiltering then
-            passes = speedSet[g.name]
-        elseif anyEvidence then
-            passes = evSet[g.name]
-        else
-            passes = true
-        end
+        local inSpeed = not speedFiltering or speedSet[g.name]
+        local inEv    = not anyEvidence    or evSet[g.name]
+        local passes  = inSpeed and inEv
 
-        -- Filtro de trait
+        -- Filtro trait confirmado
         if passes and detectedTrait then
             passes = (g.trait == detectedTrait)
+        end
+        -- Filtro traits rechazados
+        if passes and g.trait and rejectedTraits[g.trait] then
+            passes = false
         end
 
         if passes then table.insert(result, g.name) end
     end
-
-    -- ══════════════════════════════════════════════════════════════
-    --  DESCARTES CRUZADOS ESPECIALES
-    --  Aplicar lógica adicional sobre la lista de candidatos
-    -- ══════════════════════════════════════════════════════════════
-    if speedFiltering and #result > 1 then
-        local speed = currentSpeedNow
-        local jump  = maxInstantJump()
-        local grad  = avgGradualDelta()
-        local elapsed = firstSpeedReading and (tick() - firstSpeedReading.time) or 0
-
-        -- ── Blair vs Yokai/Afarit/Thaye ────────────────────────────────────
-        -- Si hay Blair en candidatos: si la speed ya saltó o subió, descartamos Blair
-        -- Si la speed lleva tiempo fija en ~13.8 sin saltar ni subir, descartamos Yokai/Afarit/Thaye
-        local hasBlair  = false
-        local hasYokai  = false
-        local hasAfarit = false
-        local hasThaye  = false
-        local hasRev    = false
-        local hasDemon  = false
-        for _, n in ipairs(result) do
-            if n == "Blair"    then hasBlair  = true end
-            if n == "Yokai"    then hasYokai  = true end
-            if n == "Afarit"   then hasAfarit = true end
-            if n == "Thaye"    then hasThaye  = true end
-            if n == "Revenant" then hasRev    = true end
-            if n == "Demon"    then hasDemon  = true end
-        end
-
-        if hasBlair and (hasYokai or hasAfarit or hasThaye) then
-            if speed >= 13.3 and speed <= 14.3 then
-                if jump >= 2.5 then
-                    -- Saltó: no es Blair (fijo). Descartar Blair
-                    local filtered = {}
-                    for _, n in ipairs(result) do
-                        if n ~= "Blair" then table.insert(filtered, n) end
-                    end
-                    result = filtered
-                elseif grad >= 0.04 and elapsed >= 3 then
-                    -- Está subiendo gradual: no es Blair ni Yokai/Afarit (instantáneos)
-                    local filtered = {}
-                    for _, n in ipairs(result) do
-                        if n ~= "Blair" and n ~= "Yokai" and n ~= "Afarit" then
-                            table.insert(filtered, n)
-                        end
-                    end
-                    result = filtered
-                elseif elapsed >= 25 and jump < 0.5 and grad < 0.03 then
-                    -- Lleva 25s sin moverse: es Blair. Descartar Yokai/Afarit/Thaye
-                    local filtered = {}
-                    for _, n in ipairs(result) do
-                        if n ~= "Yokai" and n ~= "Afarit" and n ~= "Thaye" then
-                            table.insert(filtered, n)
-                        end
-                    end
-                    result = filtered
-                end
-            end
-        end
-
-        -- ── Revenant vs Demon/Wisp/Bogey en rango 12.4 ────────────────────
-        -- Rev siempre sube a 13.8 en algún momento.
-        -- Si llevamos 20s en 12.4 fijo, descartamos Rev (ya hubiera subido) y Demon/Thaye
-        if hasRev and elapsed >= 20 and speed >= 12.0 and speed <= 12.9
-        and jump < 0.4 and grad < 0.02 then
-            local filtered = {}
-            for _, n in ipairs(result) do
-                if n ~= "Revenant" and n ~= "Demon" and n ~= "Thaye" then
-                    table.insert(filtered, n)
-                end
-            end
-            result = filtered
-        end
-
-        -- ── Si hay Blair + Revenant: ambos en 13.8 ────────────────────────
-        -- Rev eventualmente salta a 17.9. Si speed ya está en 13.8 estable
-        -- y llevamos suficiente tiempo sin subir, es Blair (Rev hubiera saltado)
-        if hasBlair and hasRev and speed >= 13.3 and speed <= 14.3
-        and elapsed >= 30 and jump < 0.5 then
-            -- Rev llega a 17.9 al ver jugador. Si no saltó, puede ser Blair.
-            -- No descartamos aún: dejamos que el tiempo/salto lo confirme.
-            -- Pero si el bot ya hizo checkMotion (que acerca el fantasma), y no saltó:
-            -- poner como único Blair (heurística conservadora tras 30s)
-            local filtered = {}
-            for _, n in ipairs(result) do
-                if n ~= "Revenant" then table.insert(filtered, n) end
-            end
-            result = filtered
-        end
-    end
-
     return result
 end
 
@@ -559,37 +425,30 @@ local function hintFor(name)
     return g and g.speed.hint or ""
 end
 
--- ── Forward declarations ──────────────────────────────────────────────────────
 local autoSelectGhostAndSubmit
 
 local function updateGhostLabel()
     if not ghostNameLbl then return end
     if ghostSpeedTagLbl then ghostSpeedTagLbl.Text = speedTag(currentSpeedNow) end
-
     local speedActive = currentSpeedNow >= 11.5
-    if not anyEvidence and not speedActive and not detectedTrait then
-        ghostNameLbl.Text       = "? candidates"
-        ghostNameLbl.TextColor3 = C.muted
+    if not anyEvidence and not speedActive and not detectedTrait and not next(rejectedTraits) then
+        ghostNameLbl.Text = "? candidates"; ghostNameLbl.TextColor3 = C.muted
         if ghostSpeedHint then ghostSpeedHint.Text = "" end
         return
     end
-
     local candidates = calcCandidates()
-
     if #candidates == 0 then
-        ghostNameLbl.Text       = "No match"
-        ghostNameLbl.TextColor3 = C.no
+        ghostNameLbl.Text = "No match"; ghostNameLbl.TextColor3 = C.no
         if ghostSpeedHint then ghostSpeedHint.Text = "" end
     elseif #candidates == 1 then
-        ghostNameLbl.Text       = candidates[1]
-        ghostNameLbl.TextColor3 = C.yes
+        ghostNameLbl.Text = candidates[1]; ghostNameLbl.TextColor3 = C.yes
         if ghostSpeedHint then
-            ghostSpeedHint.Text       = hintFor(candidates[1])
+            ghostSpeedHint.Text = hintFor(candidates[1])
             ghostSpeedHint.TextColor3 = C.trait
         end
         autoSelectGhostAndSubmit(candidates[1])
     elseif #candidates == 2 then
-        ghostNameLbl.Text       = candidates[1].." / "..candidates[2]
+        ghostNameLbl.Text = candidates[1].." / "..candidates[2]
         ghostNameLbl.TextColor3 = C.ghost
         if ghostSpeedHint then
             ghostSpeedHint.Text = candidates[1]..": "..hintFor(candidates[1])
@@ -599,19 +458,31 @@ local function updateGhostLabel()
     else
         local joined = table.concat(candidates, " / ")
         if #joined > 58 then joined = #candidates.." possible" end
-        ghostNameLbl.Text       = joined
-        ghostNameLbl.TextColor3 = C.ghost
+        ghostNameLbl.Text = joined; ghostNameLbl.TextColor3 = C.ghost
         if ghostSpeedHint then ghostSpeedHint.Text = "" end
     end
 end
 
 local function setTrait(traitName)
     if detectedTrait then return end
+    if rejectedTraits[traitName] then return end
     detectedTrait = traitName
     if traitLabel then
         local display = traitName:sub(1,1):upper()..traitName:sub(2)
-        traitLabel.Text       = "Trait: "..display
-        traitLabel.TextColor3 = C.trait
+        traitLabel.Text = "Trait: "..display; traitLabel.TextColor3 = C.trait
+    end
+    updateGhostLabel()
+end
+
+local function rejectTrait(traitName)
+    if detectedTrait then return end
+    if rejectedTraits[traitName] then return end
+    rejectedTraits[traitName] = true
+    if traitLabel then
+        local display = traitName:sub(1,1):upper()..traitName:sub(2)
+        if traitLabel.Text == "Trait: —" then
+            traitLabel.Text = "No "..display; traitLabel.TextColor3 = C.muted
+        end
     end
     updateGhostLabel()
 end
@@ -619,22 +490,17 @@ end
 confirmEvidence = function(key, dot, pill)
     if detectedEv[key] then return end
     detectedEv[key] = true; anyEvidence = true
-    if dot and pill then
-        dot.BackgroundColor3 = C.yes; pill.Text = "YES"; pill.TextColor3 = C.yes
-    end
+    if dot and pill then dot.BackgroundColor3 = C.yes; pill.Text = "YES"; pill.TextColor3 = C.yes end
     updateGhostLabel()
 end
 
 rejectEvidence = function(key, dot, pill)
     if detectedEv[key] then return end
     rejectedEv[key] = true
-    if dot and pill then
-        dot.BackgroundColor3 = C.no; pill.Text = "NO"; pill.TextColor3 = C.no
-    end
+    if dot and pill then dot.BackgroundColor3 = C.no; pill.Text = "NO"; pill.TextColor3 = C.no end
     updateGhostLabel()
 end
 
--- ── Input helpers ─────────────────────────────────────────────────────────────
 local function pressKey(keyCode)
     VirtualInputManager:SendKeyEvent(true,  keyCode, false, game)
     task.wait(0.05)
@@ -647,6 +513,12 @@ local function clickAt(cx, cy)
     VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 0)
 end
 
+local function rightClickAt(cx, cy)
+    VirtualInputManager:SendMouseButtonEvent(cx, cy, 1, true,  game, 0)
+    task.wait(0.08)
+    VirtualInputManager:SendMouseButtonEvent(cx, cy, 1, false, game, 0)
+end
+
 local function countVotes(targetFrame)
     local guesses = targetFrame:FindFirstChild("Guesses")
     if not guesses then return 0 end
@@ -657,14 +529,11 @@ local function countVotes(targetFrame)
     return count
 end
 
--- Obtiene el centro clickeable del frame del ghost en el journal
--- Según la imagen: el frame es ImageButton con AbsolutePosition ya disponible
 local function getFrameClickPos(targetFrame)
     local abs = targetFrame.AbsolutePosition
     local sz  = targetFrame.AbsoluteSize
     if abs.X > 0 and abs.Y > 0 then
-        -- Usar el centro del frame directamente (no hace falta ir al Box interno)
-        return abs.X + sz.X / 2, abs.Y + sz.Y / 2 + START_OFFSET_Y
+        return abs.X + sz.X/2, abs.Y + sz.Y/2 + START_OFFSET_Y
     end
     return nil, nil
 end
@@ -673,7 +542,7 @@ local function doTpAndHoldE(closePos)
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp  = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-    hrp.CFrame = CFrame.new(closePos + Vector3.new(0, 3, 3))
+    hrp.CFrame = CFrame.new(closePos + Vector3.new(0,3,3))
     task.wait(0.2)
     local cam = workspace.CurrentCamera
     cam.CameraType = Enum.CameraType.Scriptable
@@ -689,91 +558,76 @@ local function doTpAndHoldE(closePos)
     cam.CameraType = Enum.CameraType.Custom
 end
 
--- ── autoSelectGhostAndSubmit ──────────────────────────────────────────────────
-autoSelectGhostAndSubmit = function(ghostName)
-    if autoSubmitDone then return end
-    autoSubmitDone = true
-
+local function rushToVanAndSubmit(ghostName)
+    GHOST_IDENTIFIED = true
+    IDENTIFIED_NAME  = ghostName
     task.spawn(function()
+        task.wait(0.3)
         pressKey(Enum.KeyCode.J)
-
         local playerGui = player:FindFirstChild("PlayerGui")
-        if not playerGui then return end
-
-        local ghostSel
-        local deadline = tick() + 8
-        while tick() < deadline do
-            local ok, result = pcall(function()
-                return playerGui.Journal.Frame.Frame.Selection.Evidence.Right.GhostSelection
-            end)
-            if ok and result then ghostSel = result; break end
-            task.wait(0.15)
+        if playerGui then
+            local ghostSel
+            local deadline = tick() + 8
+            while tick() < deadline do
+                local ok, result = pcall(function()
+                    return playerGui.Journal.Frame.Frame.Selection.Evidence.Right.GhostSelection
+                end)
+                if ok and result then ghostSel = result; break end
+                task.wait(0.15)
+            end
+            if ghostSel then
+                local targetFrame = nil
+                for _, child in ipairs(ghostSel:GetChildren()) do
+                    if child.Name == ghostName then targetFrame = child; break end
+                end
+                if targetFrame then
+                    local posDeadline = tick() + 5
+                    local cx, cy
+                    while tick() < posDeadline do
+                        cx, cy = getFrameClickPos(targetFrame)
+                        if cx and cx > 10 and cy > 10 then break end
+                        task.wait(0.12)
+                    end
+                    if cx and cx > 10 then
+                        task.wait(0.4)
+                        for _ = 1, 15 do
+                            local votes = countVotes(targetFrame)
+                            if votes == 1 then break end
+                            local ox, oy = getFrameClickPos(targetFrame)
+                            if ox then clickAt(ox, oy) end
+                            task.wait(0.5)
+                        end
+                    end
+                end
+            end
         end
-        if not ghostSel then return end
-
-        -- Buscar el frame del ghost por nombre
-        local targetFrame = nil
-        for _, child in ipairs(ghostSel:GetChildren()) do
-            if child.Name == ghostName then targetFrame = child; break end
-        end
-        if not targetFrame then return end
-
-        -- Esperar que el frame tenga posición válida
-        local posDeadline = tick() + 5
-        local cx, cy
-        while tick() < posDeadline do
-            cx, cy = getFrameClickPos(targetFrame)
-            if cx and cx > 10 and cy > 10 then break end
-            -- Intentar scroll hacia el frame si no es visible
-            task.wait(0.12)
-        end
-        if not cx or cx <= 10 then return end
-
+        pressKey(Enum.KeyCode.J)
         task.wait(0.4)
-
-        -- Ciclo de voto: llevar a exactamente 1 voto
-        -- Cada click alterna: 0→1→2→1→... entonces:
-        -- Si votes==0: click una vez → 1 ✓
-        -- Si votes==1: ya listo
-        -- Si votes==2: click una vez → 1 ✓
-        -- Si votes==3+: click una vez → reduce
-
-        local MAX_TRIES = 15
-        for i = 1, MAX_TRIES do
-            local votes = countVotes(targetFrame)
-            if votes == 1 then break end
-            local ox, oy = getFrameClickPos(targetFrame)
-            if ox then clickAt(ox, oy) end
-            task.wait(0.5)
-        end
-
-        -- Verificación final
-        if countVotes(targetFrame) ~= 1 then
-            local ox, oy = getFrameClickPos(targetFrame)
-            if ox then clickAt(ox, oy); task.wait(0.6) end
-        end
-
         local van = workspace:FindFirstChild("Van")
         local vanClose = van and van:FindFirstChild("Close")
         local closePos = vanClose and getPosition(vanClose)
-
-        pressKey(Enum.KeyCode.J)
-        task.wait(0.5)
-
+        if van and van.PrimaryPart then
+            local char = player.Character or player.CharacterAdded:Wait()
+            local hrp  = char:FindFirstChild("HumanoidRootPart")
+            if hrp then hrp.CFrame = van.PrimaryPart.CFrame + Vector3.new(0,5,0) end
+        end
+        task.wait(0.3)
         if closePos then doTpAndHoldE(closePos) end
     end)
 end
 
--- ══════════════════════════════════════════════════════════════
---  UI PRINCIPAL
--- ══════════════════════════════════════════════════════════════
+autoSelectGhostAndSubmit = function(ghostName)
+    if autoSubmitDone then return end
+    autoSubmitDone = true
+    rushToVanAndSubmit(ghostName)
+end
+
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name           = "GhostInfoUI_v17"
+screenGui.Name           = "GhostInfoUI_v25"
 screenGui.ResetOnSpawn   = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent         = player:WaitForChild("PlayerGui")
 
--- ── KEY SCREEN ────────────────────────────────────────────────────────────────
 local keyScreen = Instance.new("Frame")
 keyScreen.Name = "KeyScreen"; keyScreen.Size = UDim2.new(1,0,1,0)
 keyScreen.BackgroundColor3 = Color3.fromRGB(8,8,10)
@@ -810,7 +664,6 @@ local kbPad = Instance.new("UIPadding", keyBox)
 kbPad.PaddingLeft = UDim.new(0,10); kbPad.PaddingRight = UDim.new(0,10)
 local keyBoxStroke = Instance.new("UIStroke", keyBox)
 keyBoxStroke.Color = C.border; keyBoxStroke.Thickness = 1; keyBoxStroke.Transparency = 0.2
-
 local keyStatus = mkLbl(keyCard,"",UDim2.new(1,-24,0,14),UDim2.new(0,12,0,108),nil,10,C.no)
 
 local function makeKeyBtn(text, xPos, bgColor)
@@ -828,8 +681,8 @@ local function makeKeyBtn(text, xPos, bgColor)
     end)
     return btn
 end
-local getLinkBtn  = makeKeyBtn("Get Lifetime Key", 12,  Color3.fromRGB(50,40,90))
-local checkKeyBtn = makeKeyBtn("Check Key",        142, Color3.fromRGB(40,80,50))
+local getLinkBtn  = makeKeyBtn("Get Lifetime Key",12, Color3.fromRGB(50,40,90))
+local checkKeyBtn = makeKeyBtn("Check Key",142,       Color3.fromRGB(40,80,50))
 
 getLinkBtn.MouseButton1Click:Connect(function()
     setclipboard(GET_KEY_URL)
@@ -838,9 +691,6 @@ getLinkBtn.MouseButton1Click:Connect(function()
     task.delay(2, function() getLinkBtn.Text = orig; getLinkBtn.TextColor3 = C.text end)
 end)
 
--- ══════════════════════════════════════════════════════════════
---  MAIN UI
--- ══════════════════════════════════════════════════════════════
 function launchMainUI()
     local panel = Instance.new("Frame")
     panel.Name = "Panel"; panel.Size = UDim2.new(0,228,0,680)
@@ -890,7 +740,6 @@ function launchMainUI()
         d.BorderSizePixel = 0; d.LayoutOrder = order
     end
 
-    -- Header
     local header = Instance.new("Frame",panel)
     header.Size = UDim2.new(1,0,0,36); header.BackgroundTransparency = 1; header.LayoutOrder = 1
     local tLbl = Instance.new("TextLabel",header)
@@ -900,43 +749,34 @@ function launchMainUI()
     tLbl.TextXAlignment = Enum.TextXAlignment.Left
     local sLbl = Instance.new("TextLabel",header)
     sLbl.Size = UDim2.new(1,0,0.4,0); sLbl.Position = UDim2.new(0,0,0.6,0)
-    sLbl.BackgroundTransparency = 1; sLbl.Text = "Evidence tracker  v17"
+    sLbl.BackgroundTransparency = 1; sLbl.Text = "Evidence tracker  v25"
     sLbl.TextColor3 = C.muted; sLbl.Font = Enum.Font.Gotham
     sLbl.TextScaled = false; sLbl.TextSize = 10; sLbl.TextXAlignment = Enum.TextXAlignment.Left
 
     divider(2); spacer(3,8)
 
-    -- Ghost box
     local ghostBox = Instance.new("Frame",panel)
     ghostBox.Size = UDim2.new(1,0,0,70); ghostBox.BackgroundColor3 = Color3.fromRGB(20,16,36)
     ghostBox.BorderSizePixel = 0; ghostBox.LayoutOrder = 4
     Instance.new("UICorner",ghostBox).CornerRadius = UDim.new(0,10)
     local gStroke = Instance.new("UIStroke",ghostBox)
     gStroke.Color = C.accent; gStroke.Thickness = 1; gStroke.Transparency = 0.5
-
-    mkLbl(ghostBox,"POSSIBLE GHOST",UDim2.new(1,-12,0,14),UDim2.new(0,8,0,4),
-          nil,9,C.muted,Enum.TextXAlignment.Left)
-
+    mkLbl(ghostBox,"POSSIBLE GHOST",UDim2.new(1,-12,0,14),UDim2.new(0,8,0,4),nil,9,C.muted,Enum.TextXAlignment.Left)
     ghostNameLbl = Instance.new("TextLabel",ghostBox)
     ghostNameLbl.Size = UDim2.new(1,-12,0,18); ghostNameLbl.Position = UDim2.new(0,8,0,17)
     ghostNameLbl.BackgroundTransparency = 1; ghostNameLbl.Text = "? candidates"
     ghostNameLbl.TextColor3 = C.muted; ghostNameLbl.Font = Enum.Font.GothamBold
-    ghostNameLbl.TextScaled = false; ghostNameLbl.TextSize = 13
-    ghostNameLbl.TextXAlignment = Enum.TextXAlignment.Left
-
+    ghostNameLbl.TextScaled = false; ghostNameLbl.TextSize = 13; ghostNameLbl.TextXAlignment = Enum.TextXAlignment.Left
     ghostSpeedHint = Instance.new("TextLabel",ghostBox)
     ghostSpeedHint.Size = UDim2.new(1,-12,0,12); ghostSpeedHint.Position = UDim2.new(0,8,0,36)
     ghostSpeedHint.BackgroundTransparency = 1; ghostSpeedHint.Text = ""
     ghostSpeedHint.TextColor3 = C.trait; ghostSpeedHint.Font = Enum.Font.Gotham
-    ghostSpeedHint.TextScaled = false; ghostSpeedHint.TextSize = 9
-    ghostSpeedHint.TextXAlignment = Enum.TextXAlignment.Left
-
+    ghostSpeedHint.TextScaled = false; ghostSpeedHint.TextSize = 9; ghostSpeedHint.TextXAlignment = Enum.TextXAlignment.Left
     ghostSpeedTagLbl = Instance.new("TextLabel",ghostBox)
     ghostSpeedTagLbl.Size = UDim2.new(1,-12,0,12); ghostSpeedTagLbl.Position = UDim2.new(0,8,0,52)
     ghostSpeedTagLbl.BackgroundTransparency = 1; ghostSpeedTagLbl.Text = ""
     ghostSpeedTagLbl.TextColor3 = C.accent; ghostSpeedTagLbl.Font = Enum.Font.Gotham
-    ghostSpeedTagLbl.TextScaled = false; ghostSpeedTagLbl.TextSize = 9
-    ghostSpeedTagLbl.TextXAlignment = Enum.TextXAlignment.Left
+    ghostSpeedTagLbl.TextScaled = false; ghostSpeedTagLbl.TextSize = 9; ghostSpeedTagLbl.TextXAlignment = Enum.TextXAlignment.Left
 
     spacer(5,8); divider(6); spacer(7,8)
 
@@ -970,9 +810,7 @@ function launchMainUI()
     local checkPMBtn,  _          = makeButton("📡","Check Motion", 12)
     local tpVanBtn,    _          = makeButton("🚐","TP to Van",    13)
     local staminaBtn,  staminaLbl = makeButton("⚡","Inf Stamina",  14)
-
-    -- ── DEBUG: botón para mostrar offsets del click ───────────────────────────
-    local debugBtn, debugLbl = makeButton("🎯","Click Debug OFF", 15)
+    local debugBtn,    debugLbl   = makeButton("🎯","Click Debug OFF", 15)
     local debugMode = false
     debugBtn.MouseButton1Click:Connect(function()
         debugMode = not debugMode
@@ -1011,7 +849,6 @@ function launchMainUI()
 
     divider(25); spacer(26,8)
 
-    -- Trait row
     local traitRow = Instance.new("Frame",panel)
     traitRow.Size = UDim2.new(1,0,0,28); traitRow.BackgroundColor3 = Color3.fromRGB(40,30,10)
     traitRow.BorderSizePixel = 0; traitRow.LayoutOrder = 27
@@ -1043,15 +880,13 @@ function launchMainUI()
     speedVal.TextScaled = false; speedVal.TextSize = 11; speedVal.Font = Enum.Font.GothamBold
     speedVal.TextColor3 = C.accent; speedVal.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- ── Interceptar clicks para modo debug ───────────────────────────────────
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    UserInputService.InputBegan:Connect(function(input, _)
         if not debugMode then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             showClickDebug(input.Position.X, input.Position.Y)
         end
     end)
 
-    -- ── BOTONES ───────────────────────────────────────────────────────────────
     tpGhostBtn.MouseButton1Click:Connect(function()
         local char = player.Character or player.CharacterAdded:Wait()
         local hrp  = char:WaitForChild("HumanoidRootPart")
@@ -1075,16 +910,13 @@ function launchMainUI()
             local prompt = bone:FindFirstChildWhichIsA("ProximityPrompt", true)
             if prompt then pcall(fireproximityprompt, prompt) end
             task.wait(0.5)
-            -- Vigilar si el ghost se acerca (<10 studs → TP a la van)
             local watchDeadline = tick() + 15
             while tick() < watchDeadline do
                 local ghostPos  = getPosition(ghost)
                 local playerPos = hrp and hrp.Position
                 if ghostPos and playerPos and (ghostPos - playerPos).Magnitude < 10 then
                     local van = workspace:FindFirstChild("Van")
-                    if van and van.PrimaryPart then
-                        hrp.CFrame = van.PrimaryPart.CFrame + Vector3.new(0,5,0)
-                    end
+                    if van and van.PrimaryPart then hrp.CFrame = van.PrimaryPart.CFrame + Vector3.new(0,5,0) end
                     break
                 end
                 task.wait(0.3)
@@ -1097,8 +929,8 @@ function launchMainUI()
         if not gm then return end
         local gr = gm:FindFirstChild("HumanoidRootPart")
         if not gr then return end
-        local sg   = motions:FindFirstChild("SensorGrid")
-        local src  = sg and sg:GetChildren() or motions:GetDescendants()
+        local sg  = motions:FindFirstChild("SensorGrid")
+        local src = sg and sg:GetChildren() or motions:GetDescendants()
         local saved = {}
         for _, grid in pairs(src) do
             if grid:IsA("Part") then
@@ -1119,9 +951,7 @@ function launchMainUI()
         elseif no and not detectedEv["motion"] then rejectEvidence("motion", mDot, mPill) end
     end
 
-    checkPMBtn.MouseButton1Click:Connect(function()
-        runCheckMotion(motDot, motPill)
-    end)
+    checkPMBtn.MouseButton1Click:Connect(function() runCheckMotion(motDot, motPill) end)
 
     tpVanBtn.MouseButton1Click:Connect(function()
         local char = player.Character or player.CharacterAdded:Wait()
@@ -1147,7 +977,6 @@ function launchMainUI()
         end
     end)
 
-    -- ── EVIDENCIA AUTOMÁTICA ──────────────────────────────────────────────────
     emfs.ChildAdded:Connect(function(e)
         if e.Name == "EMF5" then confirmEvidence("emf", emfDot, emfPill) end
     end)
@@ -1157,14 +986,12 @@ function launchMainUI()
     orbs.ChildAdded:Connect(function()
         confirmEvidence("orbs", orbDot, orbPill)
     end)
-
     task.delay(120, function()
         if not detectedEv["emf"]          then rejectEvidence("emf",         emfDot, emfPill)  end
         if not detectedEv["fingerprints"] then rejectEvidence("fingerprints", fpDot,  fpPill)  end
         if not detectedEv["orbs"]         then rejectEvidence("orbs",         orbDot, orbPill) end
     end)
 
-    -- ── LOOP MOTION ───────────────────────────────────────────────────────────
     task.spawn(function()
         while true do
             local yes, no = false, false
@@ -1182,8 +1009,8 @@ function launchMainUI()
         end
     end)
 
-    -- Check motion automático cada 5s mientras no se detecte
     task.spawn(function()
+        task.wait(22)
         while not detectedEv["motion"] do
             task.wait(5)
             if detectedEv["motion"] then break end
@@ -1191,7 +1018,6 @@ function launchMainUI()
         end
     end)
 
-    -- ── BOOK ──────────────────────────────────────────────────────────────────
     local function watchBook(book)
         local function checkPages()
             if detectedEv["book"] then return end
@@ -1220,37 +1046,41 @@ function launchMainUI()
     equipment.ChildAdded:Connect(function(item)
         if item.Name == "Book" then watchBook(item) end
     end)
-    task.delay(180, function()
+    task.delay(120, function()
         if not detectedEv["book"] then rejectEvidence("book", bookDot, bookPill) end
     end)
 
-    -- ── TRAIT: FLICKER ────────────────────────────────────────────────────────
     task.spawn(function()
-        local startTime = tick()
+        local startTime   = tick()
+        local transitions = 0
+        local lastState   = nil
         local conn
         conn = RunService.Heartbeat:Connect(function()
-            if detectedTrait then conn:Disconnect(); return end
-            if tick() - startTime > 20 then conn:Disconnect(); return end
-            if ghostBase.Transparency <= 0.05 then
-                conn:Disconnect(); setTrait("flicker")
+            if detectedTrait or rejectedTraits["flicker"] then conn:Disconnect(); return end
+            if tick() - startTime > 20 then
+                conn:Disconnect(); rejectTrait("flicker"); return
             end
+            local t            = ghostBase.Transparency
+            local currentState = t <= 0.05 and "visible" or "hidden"
+            if lastState ~= nil and currentState ~= lastState then transitions += 1 end
+            lastState = currentState
+            if transitions >= 3 then conn:Disconnect(); setTrait("flicker") end
         end)
     end)
 
-    -- ── TRAIT: TORMENTOR ──────────────────────────────────────────────────────
     task.spawn(function()
         local tormentor = Lighting:FindFirstChild("Tormentor")
         if not tormentor then tormentor = Lighting:WaitForChild("Tormentor", 30) end
         if not tormentor then return end
         local function checkT()
             if detectedTrait then return end
+            if rejectedTraits["tormentor"] then return end
             if tormentor.Enabled == true then setTrait("tormentor") end
         end
         checkT()
         tormentor:GetPropertyChangedSignal("Enabled"):Connect(checkT)
     end)
 
-    -- ── TRAIT: TRICKSTER ──────────────────────────────────────────────────────
     task.spawn(function()
         local function checkForTrickster(model)
             if detectedTrait then return end
@@ -1271,7 +1101,6 @@ function launchMainUI()
         end)
     end)
 
-    -- ── SPEED TRACKING + descarte continuo ───────────────────────────────────
     task.spawn(function()
         while true do
             local speed = ghost:GetAttribute("Speed") or 0
@@ -1292,18 +1121,13 @@ function launchMainUI()
         end
     end)
 
-    -- ── Descarte continuo cada 1s (re-evalúa aunque no cambie speed) ──────────
-    -- Importante para los descartes basados en tiempo (Blair, Rev, etc.)
     task.spawn(function()
         while true do
             task.wait(1)
-            if currentSpeedNow >= 11.5 then
-                updateGhostLabel()
-            end
+            if currentSpeedNow >= 11.5 then updateGhostLabel() end
         end
     end)
 
-    -- ── ESP BONE ──────────────────────────────────────────────────────────────
     if bone then
         local part = bone:IsA("BasePart") and bone or bone:FindFirstChildWhichIsA("BasePart",true)
         if part then
@@ -1316,7 +1140,6 @@ function launchMainUI()
         end
     end
 
-    -- ── ESP GHOST ─────────────────────────────────────────────────────────────
     local ghostESP
     local function createGhostESP(part)
         if ghostESP then ghostESP:Destroy() end
@@ -1340,17 +1163,13 @@ function launchMainUI()
     end)
 end
 
--- ── Helpers de pickup ─────────────────────────────────────────────────────────
-local function pickupWithPrompt(model)
+local function pickupWithPromptAndF(model)
     if not model then return false end
     local prompt = model:FindFirstChildWhichIsA("ProximityPrompt", true)
     if not prompt then return false end
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp  = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return false end
     local pos = getPosition(model)
     if not pos then return false end
-    hrp.CFrame = CFrame.new(pos + Vector3.new(0,3,2))
+    safeTp(pos, Vector3.new(0,3,2))
     task.wait(0.2)
     local cam = workspace.CurrentCamera
     cam.CameraType = Enum.CameraType.Scriptable
@@ -1358,12 +1177,9 @@ local function pickupWithPrompt(model)
     task.wait(0.15)
     pcall(fireproximityprompt, prompt)
     task.wait(0.1)
-    local pressKeyLocal = function(keyCode)
-        VirtualInputManager:SendKeyEvent(true,  keyCode, false, game)
-        task.wait(0.05)
-        VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
-    end
-    pressKeyLocal(Enum.KeyCode.F)
+    VirtualInputManager:SendKeyEvent(true,  Enum.KeyCode.F, false, game)
+    task.wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
     cam.CameraType = Enum.CameraType.Custom
     return true
 end
@@ -1377,72 +1193,152 @@ local function waitForDisappear(model, timeout)
     return false
 end
 
-local function placeItemNearGhost(slot)
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp  = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    local ghostPos = getPosition(ghost)
-    if not ghostPos then return end
-    hrp.CFrame = CFrame.new(ghostPos + Vector3.new(3,0,3))
+local function waitForEquipmentItem(itemName, maxWait)
+    maxWait = maxWait or 20
+    local deadline = tick() + maxWait
+    local vp = workspace.CurrentCamera.ViewportSize
+    local cx = vp.X / 2; local cy = vp.Y / 2
+    while tick() < deadline do
+        if GHOST_IDENTIFIED then return false end
+        if workspace:FindFirstChild("Equipment") then
+            if workspace.Equipment:FindFirstChild(itemName) then return true end
+        end
+        VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true,  game, 0)
+        task.wait(0.08)
+        VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 0)
+        task.wait(0.4)
+    end
+    return false
+end
+
+local function doPhotoRoutine()
+    if GHOST_IDENTIFIED then return end
+    local cam = workspace.CurrentCamera
+    local vp  = cam.ViewportSize
+    local cx  = vp.X / 2
+    local cy  = vp.Y / 2
+    local MAX_PHOTOS = 4
+    cam.CameraType = Enum.CameraType.Scriptable
+    for i = 1, MAX_PHOTOS do
+        if GHOST_IDENTIFIED then break end
+        local gp = getPosition(ghost)
+        if gp then
+            safeTp(gp, Vector3.new(3,1,0))
+            task.wait(0.1)
+            local c2 = player.Character
+            local h2 = c2 and c2:FindFirstChild("HumanoidRootPart")
+            if h2 then
+                cam.CFrame = CFrame.lookAt(h2.Position + Vector3.new(0,1,0), gp)
+            end
+            task.wait(0.15)
+            rightClickAt(cx, cy)
+            task.wait(0.2)
+        end
+        if i < MAX_PHOTOS then
+            local waitDeadline = tick() + 2 + math.random()
+            while tick() < waitDeadline do
+                if GHOST_IDENTIFIED then break end
+                local gp2 = getPosition(ghost)
+                local c2  = player.Character
+                local h2  = c2 and c2:FindFirstChild("HumanoidRootPart")
+                if gp2 and h2 then
+                    cam.CFrame = CFrame.lookAt(h2.Position + Vector3.new(0,1,0), gp2)
+                end
+                task.wait(0.05)
+            end
+        end
+    end
+    cam.CameraType = Enum.CameraType.Custom
+end
+
+local function placeItemNearGhost(keyCode)
+    local gp = getPosition(ghost)
+    if not gp then return end
+    safeTp(gp, Vector3.new(3,0,3))
     task.wait(0.2)
     local cam = workspace.CurrentCamera
     cam.CameraType = Enum.CameraType.Scriptable
-    cam.CFrame = CFrame.lookAt(cam.CFrame.Position, hrp.Position + Vector3.new(0,-2,0))
+    local char = player.Character
+    local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        cam.CFrame = CFrame.lookAt(cam.CFrame.Position, hrp.Position + Vector3.new(0,-2,0))
+    end
     task.wait(0.1)
-    VirtualInputManager:SendKeyEvent(true,  slot, false, game)
-    task.wait(0.05)
-    VirtualInputManager:SendKeyEvent(false, slot, false, game)
-    task.wait(0.3)
+    VirtualInputManager:SendKeyEvent(true,  keyCode, false, game); task.wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, keyCode, false, game); task.wait(0.3)
     local vp = workspace.CurrentCamera.ViewportSize
-    VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, true,  game, 0)
-    task.wait(0.08)
+    VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, true,  game, 0); task.wait(0.08)
     VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, false, game, 0)
     cam.CameraType = Enum.CameraType.Custom
 end
 
--- ── Rutina de inicio ──────────────────────────────────────────────────────────
 local function initialPickupRoutine()
     task.spawn(function()
         task.wait(1)
+        if GHOST_IDENTIFIED then return end
+
         local van = workspace:WaitForChild("Van", 10)
         if not van then return end
         local vanEquip = van:FindFirstChild("Equipment")
         if not vanEquip then return end
 
         local book = vanEquip:FindFirstChild("Book")
-        if book then pickupWithPrompt(book); waitForDisappear(book, 5) end
+        if book then pickupWithPromptAndF(book); waitForDisappear(book, 5) end
+        if GHOST_IDENTIFIED then return end
 
         local motionSensor = vanEquip:FindFirstChild("Motion Sensor")
-        if motionSensor then pickupWithPrompt(motionSensor); waitForDisappear(motionSensor, 5) end
+        if motionSensor then pickupWithPromptAndF(motionSensor); waitForDisappear(motionSensor, 5) end
+        if GHOST_IDENTIFIED then return end
+
+        local camera = vanEquip:FindFirstChild("Camera")
+        if camera then pickupWithPromptAndF(camera); waitForDisappear(camera, 5) end
+        if GHOST_IDENTIFIED then return end
 
         task.wait(0.3)
-        placeItemNearGhost(Enum.KeyCode.One)
-        task.wait(2)
-        placeItemNearGhost(Enum.KeyCode.Two)
-        task.wait(10)
 
-        -- Acercarse al ghost y mirar 3s
-        local ghostPos = getPosition(ghost)
-        if ghostPos then
-            local char = player.Character or player.CharacterAdded:Wait()
-            local hrp  = char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.CFrame = CFrame.new(ghostPos + Vector3.new(0,5,3))
+        placeItemNearGhost(Enum.KeyCode.One)
+        if GHOST_IDENTIFIED then return end
+        waitForEquipmentItem("Book", 20)
+        if GHOST_IDENTIFIED then return end
+
+        placeItemNearGhost(Enum.KeyCode.Two)
+        if GHOST_IDENTIFIED then return end
+        waitForEquipmentItem("Motion Sensor", 20)
+        if GHOST_IDENTIFIED then return end
+
+        task.wait(3)
+        if GHOST_IDENTIFIED then return end
+
+        VirtualInputManager:SendKeyEvent(true,  Enum.KeyCode.Three, false, game); task.wait(0.05)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Three, false, game); task.wait(0.3)
+        if GHOST_IDENTIFIED then return end
+
+        doPhotoRoutine()
+        if GHOST_IDENTIFIED then return end
+
+        do
+            local gp = getPosition(ghost)
+            if gp then
+                safeTp(gp, Vector3.new(0,5,3))
                 task.wait(0.15)
                 local cam = workspace.CurrentCamera
                 cam.CameraType = Enum.CameraType.Scriptable
                 local lookDeadline = tick() + 3
+                local tormentorActivated = false
                 while tick() < lookDeadline do
-                    local gp = getPosition(ghost)
-                    if gp then cam.CFrame = CFrame.lookAt(cam.CFrame.Position, gp) end
+                    if GHOST_IDENTIFIED then break end
+                    local gp2 = getPosition(ghost)
+                    if gp2 then cam.CFrame = CFrame.lookAt(cam.CFrame.Position, gp2) end
+                    if detectedTrait == "tormentor" then tormentorActivated = true; break end
                     task.wait(0.05)
                 end
                 cam.CameraType = Enum.CameraType.Custom
+                if not tormentorActivated and not detectedTrait then rejectTrait("tormentor") end
                 task.wait(0.1)
             end
         end
+        if GHOST_IDENTIFIED then return end
 
-        -- Check motion
         local ghostModel = workspace.NPCs and workspace.NPCs:FindFirstChildOfClass("Model")
         if ghostModel then
             local ghostRoot = ghostModel:FindFirstChild("HumanoidRootPart")
@@ -1461,49 +1357,45 @@ local function initialPickupRoutine()
                 end
             end
         end
+        if GHOST_IDENTIFIED then return end
 
-        -- Collect bone + vigilar ghost
         if bone then
             local bonePos = getPosition(bone)
             if bonePos then
-                local char = player.Character or player.CharacterAdded:Wait()
-                local hrp  = char:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    hrp.CFrame = CFrame.new(bonePos + Vector3.new(0,4,0))
-                    task.wait(0.2)
-                    workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, bonePos)
-                    task.wait(0.2)
-                    local prompt = bone:FindFirstChildWhichIsA("ProximityPrompt", true)
-                    if prompt then pcall(fireproximityprompt, prompt) end
-                    task.wait(0.5)
-                    local watchDeadline = tick() + 15
-                    while tick() < watchDeadline do
-                        local gPos = getPosition(ghost)
-                        local pPos = hrp and hrp.Position
-                        if gPos and pPos and (gPos - pPos).Magnitude < 10 then
-                            local v = workspace:FindFirstChild("Van")
-                            if v and v.PrimaryPart then hrp.CFrame = v.PrimaryPart.CFrame + Vector3.new(0,5,0) end
-                            break
-                        end
-                        task.wait(0.3)
+                safeTp(bonePos, Vector3.new(0,4,0))
+                task.wait(0.2)
+                workspace.CurrentCamera.CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, bonePos)
+                task.wait(0.2)
+                local prompt = bone:FindFirstChildWhichIsA("ProximityPrompt", true)
+                if prompt then pcall(fireproximityprompt, prompt) end
+                task.wait(0.5)
+                local watchDeadline = tick() + 15
+                while tick() < watchDeadline do
+                    if GHOST_IDENTIFIED then break end
+                    local char = player.Character
+                    local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+                    local gPos = getPosition(ghost)
+                    local pPos = hrp and hrp.Position
+                    if gPos and pPos and (gPos - pPos).Magnitude < 10 then
+                        local v = workspace:FindFirstChild("Van")
+                        if v and v.PrimaryPart then hrp.CFrame = v.PrimaryPart.CFrame + Vector3.new(0,5,0) end
+                        break
                     end
+                    task.wait(0.3)
                 end
             end
         end
+        if GHOST_IDENTIFIED then return end
 
-        -- Volver a la van
         local v  = workspace:FindFirstChild("Van")
         local sp = v and v:FindFirstChild("Spawn")
-        local char = player.Character or player.CharacterAdded:Wait()
-        local hrp  = char:FindFirstChild("HumanoidRootPart")
-        if hrp and sp then
+        if sp then
             local spPos = getPosition(sp)
-            if spPos then hrp.CFrame = CFrame.new(spPos + Vector3.new(0,3,0)) end
+            if spPos then safeTp(spPos, Vector3.new(0,3,0)) end
         end
     end)
 end
 
--- ── Key check y arranque ──────────────────────────────────────────────────────
 checkKeyBtn.MouseButton1Click:Connect(function()
     local entered = keyBox.Text:gsub("%s+", "")
     if entered == VALID_KEY then
