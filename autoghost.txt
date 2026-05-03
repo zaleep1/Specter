@@ -1,0 +1,1059 @@
+local KEY_FILE      = "specter_key.txt"
+local VALID_KEY     = "5G0HL1P7MXNZXWDJSA13ZAWDJAMWASD"
+local GET_KEY_URL   = "https://lootdest.org/s?SsiC5LyZ"
+local START_OFFSET_Y = 50
+
+local Players             = game:GetService("Players")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local RunService          = game:GetService("RunService")
+local TweenService        = game:GetService("TweenService")
+local Lighting            = game:GetService("Lighting")
+
+local player    = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+if player:GetAttribute("SpecterLiteRunning") then return end
+player:SetAttribute("SpecterLiteRunning", true)
+
+local function isKeyStored()
+    local ok, content = pcall(readfile, KEY_FILE)
+    return ok and content == VALID_KEY
+end
+
+local function storeKey()
+    pcall(writefile, KEY_FILE, VALID_KEY)
+end
+
+local GAR = {
+    void     = Color3.fromRGB(0,   0,   0),
+    deep     = Color3.fromRGB(4,   2,   0),
+    ring     = Color3.fromRGB(235, 100,  10),
+    ringHot  = Color3.fromRGB(255, 185,  30),
+    ringGlow = Color3.fromRGB(160,  45,   0),
+    ringDim  = Color3.fromRGB( 80,  28,   0),
+    lens     = Color3.fromRGB(255, 140,  20),
+    green    = Color3.fromRGB(120, 255, 140),
+    purple   = Color3.fromRGB(255, 160,  60),
+    amber    = Color3.fromRGB(255, 200,  50),
+    red      = Color3.fromRGB(255,  65,  40),
+    white    = Color3.fromRGB(255, 240, 210),
+    muted    = Color3.fromRGB(150, 100,  50),
+    dim      = Color3.fromRGB( 60,  38,  10),
+}
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name           = "SpecterLite"
+screenGui.ResetOnSpawn   = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
+screenGui.Parent         = playerGui
+
+local notifyHolder = Instance.new("Frame", screenGui)
+notifyHolder.Name                   = "NotifyHolder"
+notifyHolder.Size                   = UDim2.new(0, 330, 1, -24)
+notifyHolder.Position               = UDim2.new(1, -345, 0, 12)
+notifyHolder.BackgroundTransparency = 1
+notifyHolder.BorderSizePixel        = 0
+local holderLayout = Instance.new("UIListLayout", notifyHolder)
+holderLayout.VerticalAlignment   = Enum.VerticalAlignment.Bottom
+holderLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+holderLayout.FillDirection       = Enum.FillDirection.Vertical
+holderLayout.SortOrder           = Enum.SortOrder.LayoutOrder
+holderLayout.Padding             = UDim.new(0, 7)
+
+local notifyCount = 0
+
+local function notify(msg, color, duration, category)
+    duration = duration or 5
+    color    = color    or GAR.ring
+    category = category or "system"
+    notifyCount += 1
+
+    local iconText = ({ evidence="⊙", ghost="✦", trait="⟳", system="◎" })[category] or "◎"
+    local subText  = ({ evidence="EVIDENCE DETECTED", ghost="ENTITY IDENTIFIED", trait="TRAIT ACQUIRED", system="SPECTER DETECTOR" })[category] or "SPECTER DETECTOR"
+
+    local CARD_H = 70
+    local wrapper = Instance.new("Frame", notifyHolder)
+    wrapper.Name = "N_"..notifyCount
+    wrapper.Size = UDim2.new(1, 0, 0, CARD_H)
+    wrapper.BackgroundTransparency = 1
+    wrapper.BorderSizePixel = 0
+    wrapper.Position = UDim2.new(1.3, 0, 0, 0)
+
+    local shadow = Instance.new("Frame", wrapper)
+    shadow.Size = UDim2.new(1, 6, 1, 6); shadow.Position = UDim2.new(0, -3, 0, 3)
+    shadow.BackgroundColor3 = color; shadow.BackgroundTransparency = 0.88; shadow.BorderSizePixel = 0
+    Instance.new("UICorner", shadow).CornerRadius = UDim.new(0, 14)
+
+    local card = Instance.new("Frame", wrapper)
+    card.Size = UDim2.new(1, -4, 1, -4); card.Position = UDim2.new(0, 2, 0, 2)
+    card.BackgroundColor3 = GAR.void; card.BorderSizePixel = 0; card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 12)
+
+    local stroke = Instance.new("UIStroke", card)
+    stroke.Color = color; stroke.Thickness = 1; stroke.Transparency = 0.45
+
+    local rim = Instance.new("Frame", card)
+    rim.Size = UDim2.new(0, 5, 1, 0); rim.BackgroundColor3 = color; rim.BorderSizePixel = 0; rim.ZIndex = 3
+
+    local ico = Instance.new("TextLabel", card)
+    ico.Size = UDim2.new(0, 34, 1, 0); ico.Position = UDim2.new(0, 10, 0, 0)
+    ico.BackgroundTransparency = 1; ico.Text = iconText; ico.TextSize = 18
+    ico.Font = Enum.Font.GothamBold; ico.TextColor3 = color
+    ico.TextXAlignment = Enum.TextXAlignment.Center; ico.TextYAlignment = Enum.TextYAlignment.Center; ico.ZIndex = 4
+
+    local icoHalo = Instance.new("Frame", card)
+    icoHalo.Size = UDim2.new(0, 28, 0, 28); icoHalo.Position = UDim2.new(0, 13, 0.5, -14)
+    icoHalo.BackgroundColor3 = color; icoHalo.BackgroundTransparency = 0.82; icoHalo.BorderSizePixel = 0; icoHalo.ZIndex = 2
+    Instance.new("UICorner", icoHalo).CornerRadius = UDim.new(0.5, 0)
+
+    local msgLbl = Instance.new("TextLabel", card)
+    msgLbl.Size = UDim2.new(1, -60, 0, 22); msgLbl.Position = UDim2.new(0, 50, 0, 10)
+    msgLbl.BackgroundTransparency = 1; msgLbl.Text = msg; msgLbl.TextSize = 12
+    msgLbl.Font = Enum.Font.GothamBold; msgLbl.TextColor3 = GAR.white
+    msgLbl.TextXAlignment = Enum.TextXAlignment.Left; msgLbl.TextWrapped = true; msgLbl.ZIndex = 4
+
+    local sub = Instance.new("TextLabel", card)
+    sub.Size = UDim2.new(1, -60, 0, 12); sub.Position = UDim2.new(0, 50, 0, 33)
+    sub.BackgroundTransparency = 1; sub.Text = subText; sub.TextSize = 8
+    sub.Font = Enum.Font.Gotham; sub.TextColor3 = color; sub.TextTransparency = 0.3
+    sub.TextXAlignment = Enum.TextXAlignment.Left; sub.ZIndex = 4
+
+    local barBg = Instance.new("Frame", card)
+    barBg.Size = UDim2.new(1, -5, 0, 3); barBg.Position = UDim2.new(0, 5, 1, -3)
+    barBg.BackgroundColor3 = GAR.dim; barBg.BorderSizePixel = 0; barBg.ZIndex = 4
+
+    local bar = Instance.new("Frame", barBg)
+    bar.Size = UDim2.new(1, 0, 1, 0); bar.BackgroundColor3 = color; bar.BorderSizePixel = 0; bar.ZIndex = 5
+
+    TweenService:Create(wrapper, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Position = UDim2.new(0, 0, 0, 0) }):Play()
+    TweenService:Create(bar, TweenInfo.new(duration, Enum.EasingStyle.Linear), { Size = UDim2.new(0, 0, 1, 0) }):Play()
+
+    task.spawn(function()
+        while wrapper.Parent do
+            TweenService:Create(icoHalo, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { BackgroundTransparency = 0.65 }):Play()
+            task.wait(0.9)
+            if not wrapper.Parent then break end
+            TweenService:Create(icoHalo, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { BackgroundTransparency = 0.88 }):Play()
+            task.wait(0.9)
+        end
+    end)
+
+    task.delay(duration, function()
+        TweenService:Create(wrapper, TweenInfo.new(0.38, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { Position = UDim2.new(1.3, 0, 0, 0), Size = UDim2.new(1, 0, 0, 0) }):Play()
+        task.wait(0.4)
+        wrapper:Destroy()
+    end)
+end
+
+local EV_NAMES = {
+    emf="EMF Level 5", motion="Motion Sensor", orbs="Ghost Orbs", fingerprints="Fingerprints", book="Book Writing",
+}
+
+local SPEED_TOL = 0.3
+
+local GHOSTS = {
+    { name="Haint",       ev={"motion","orbs"},                            trait="tormentor", spd=23.4 },
+    { name="Myling",      ev={"emf","motion"},                             trait=nil,         spd=17.9 },
+    { name="O Tokata",    ev={"emf","fingerprints","orbs"},                trait=nil,         spd=14.4 },
+    { name="Blair",       ev={"emf"},                                      trait=nil,         spd=13.8 },
+    { name="Duppy",       ev={"trickster","emf","orbs"},                   trait="trickster", spd=15.1 },
+    { name="Wendigo",     ev={"motion"},                                   trait="tormentor", spd=15.1 },
+    { name="Preta",       ev={"emf","motion","fingerprints"},              trait=nil,         spd=15.4 },
+    { name="Thaye",       ev={"orbs","fingerprints"},                      trait="trickster", spd=13.8 },
+    { name="Afarit",      ev={"motion","orbs"},                            trait="tormentor", spd=13.8 },
+    { name="Yokai",       ev={"trickster","motion","fingerprints"},        trait="trickster", spd=13.8 },
+    { name="Demon",       ev={"flicker","book"},                           trait="flicker",   spd=12.4 },
+    { name="Revenant",    ev={"emf","fingerprints","book"},                trait="flicker",   spd=12.4 },
+    { name="Wisp",        ev={"flicker","orbs","fingerprints","book"},     trait="flicker",   spd=12.4 },
+    { name="Jinn",        ev={"flicker","emf","motion","orbs"},            trait="flicker",   spd=12.4 },
+    { name="Mare",        ev={"flicker","orbs"},                           trait="flicker",   spd=12.4 },
+    { name="Spirit",      ev={"flicker","book","fingerprints"},            trait="flicker",   spd=12.4 },
+    { name="Bogey",       ev={"orbs","fingerprints","motion"},             trait=nil,         spd=12.4 },
+    { name="Aswang",      ev={"emf","fingerprints"},                       trait=nil,         spd=12.4 },
+    { name="Banshee",     ev={"emf","fingerprints"},                       trait="tormentor", spd=12.4 },
+    { name="Bhuta",       ev={"book","motion"},                            trait=nil,         spd=12.4 },
+    { name="Douen",       ev={"trickster","motion","fingerprints","book"}, trait="trickster", spd=12.4 },
+    { name="Egui",        ev={"orbs","book"},                              trait="trickster", spd=12.4 },
+    { name="Mimic",       ev={"book","emf"},                               trait=nil,         spd=12.4 },
+    { name="Oni",         ev={"motion","book"},                            trait="tormentor", spd=12.4 },
+    { name="Phantom",     ev={"emf","orbs"},                               trait=nil,         spd=12.4 },
+    { name="Poltergeist", ev={"trickster","fingerprints","orbs"},          trait="trickster", spd=12.4 },
+    { name="Shade",       ev={"emf","book","orbs"},                        trait=nil,         spd=12.4 },
+    { name="Upyr",        ev={"emf","motion"},                             trait=nil,         spd=12.4 },
+    { name="Wraith",      ev={"motion","book","emf"},                      trait=nil,         spd=12.4 },
+    { name="Yurei",       ev={"book","orbs"},                              trait="tormentor", spd=12.4 },
+}
+
+local NEEDS_SCROLL_DOWN = {
+    Spirit=true, Upyr=true, Wraith=true, Yurei=true,
+    Yokai=true, Wisp=true, Shade=true, Poltergeist=true,
+}
+
+local detectedEv     = {}
+local rejectedEv     = {}
+local anyEvidence    = false
+local detectedTrait  = nil
+local rejectedTraits = {}
+local currentSpeedNow   = 0
+local firstSpeedReading = nil
+local thayeConfirmed    = false
+local identifiedDone    = false
+local bookExtendedTimerLaunched = false
+local ITEMS_PICKED = 0
+
+local ghost     = nil
+local ghostBase = nil
+local motions   = nil
+
+local confirmEvidence, rejectEvidence, setTrait, rejectTrait
+
+local function getPosition(inst)
+    if not inst then return nil end
+    if inst:IsA("BasePart") then return inst.Position end
+    if inst.PrimaryPart then return inst.PrimaryPart.Position end
+    local p = inst:FindFirstChildWhichIsA("BasePart", true)
+    if p then return p.Position end
+    return nil
+end
+
+local function colorClose(c1, c2, tol)
+    tol = tol or 0.01
+    return math.abs(c1.R-c2.R)<tol and math.abs(c1.G-c2.G)<tol and math.abs(c1.B-c2.B)<tol
+end
+
+local COLOR_MOTION_YES = Color3.fromRGB(252, 52, 52)
+local COLOR_TOOTHPASTE = BrickColor.new("Toothpaste").Color
+
+local function pressKey(keyCode)
+    VirtualInputManager:SendKeyEvent(true, keyCode, false, game)
+    task.wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, keyCode, false, game)
+end
+
+local function clickAt(cx, cy)
+    VirtualInputManager:SendMouseButtonEvent(cx, cy + START_OFFSET_Y, 0, true, game, 0)
+    task.wait(0.08)
+    VirtualInputManager:SendMouseButtonEvent(cx, cy + START_OFFSET_Y, 0, false, game, 0)
+end
+
+local function getVanClosePos()
+    local van = workspace:FindFirstChild("Van")
+    if not van then return nil end
+    local vanClose = van:FindFirstChild("Close")
+    local closePos = vanClose and getPosition(vanClose)
+    if not closePos and van.PrimaryPart then
+        closePos = van.PrimaryPart.Position + Vector3.new(0, 0, 3)
+    end
+    return closePos
+end
+
+local function doTpAndHoldE(closePos)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp  = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    hrp.CFrame = CFrame.new(closePos + Vector3.new(2.2, 2, 0.4), closePos)
+    task.wait(0.25)
+    local cam = workspace.CurrentCamera
+    cam.CameraType = Enum.CameraType.Scriptable
+    local camOffset = closePos + Vector3.new(2.8, 1.6, 0.4)
+    cam.CFrame = CFrame.lookAt(camOffset, closePos)
+    task.wait(0.15)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    local holdUntil = tick() + 5
+    while tick() < holdUntil do
+        cam.CFrame = CFrame.lookAt(camOffset, closePos)
+        task.wait(0.05)
+    end
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    cam.CameraType = Enum.CameraType.Custom
+end
+
+local function openVanRobust()
+    notify("Opening van...", GAR.lens, 4, "system")
+    for attempt = 1, 8 do
+        local closePos = getVanClosePos()
+        if closePos then
+            local ok = pcall(doTpAndHoldE, closePos)
+            if ok then
+                task.wait(1.5)
+                local snpcs = workspace:FindFirstChild("ServerNPCs")
+                if snpcs and snpcs:FindFirstChild("GLOBAL") then return true end
+            end
+            if attempt < 8 then
+                notify("Van attempt "..attempt.."/8, retrying...", GAR.amber, 3, "system")
+                task.wait(2)
+            end
+        else
+            task.wait(3)
+        end
+    end
+    return false
+end
+
+local function pickupItem(model)
+    if not model then return false end
+    local prompt = model:FindFirstChildWhichIsA("ProximityPrompt", true)
+    if not prompt then return false end
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp  = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    local pos = getPosition(model)
+    if not pos then return false end
+    hrp.CFrame = CFrame.new(pos + Vector3.new(0, 3, 2))
+    task.wait(0.2)
+    local cam = workspace.CurrentCamera
+    cam.CameraType = Enum.CameraType.Scriptable
+    cam.CFrame = CFrame.lookAt(cam.CFrame.Position, pos)
+    task.wait(0.15)
+    pcall(fireproximityprompt, prompt)
+    task.wait(0.1)
+    pressKey(Enum.KeyCode.F)
+    cam.CameraType = Enum.CameraType.Custom
+    return true
+end
+
+local function waitForDisappear(model, timeout)
+    local deadline = tick() + timeout
+    while tick() < deadline do
+        if not model or not model.Parent then return true end
+        task.wait(0.15)
+    end
+    return false
+end
+
+local function waitForEquipmentItem(itemName, maxWait)
+    maxWait = maxWait or 20
+    local deadline = tick() + maxWait
+    local vp = workspace.CurrentCamera.ViewportSize
+    local cx = vp.X / 2; local cy = vp.Y / 2
+    while tick() < deadline do
+        if identifiedDone then return false end
+        if workspace:FindFirstChild("Equipment") and workspace.Equipment:FindFirstChild(itemName) then return true end
+        VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true, game, 0)
+        task.wait(0.08)
+        VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 0)
+        task.wait(0.4)
+    end
+    return false
+end
+
+local function safeTPNearGhost(offsetX, offsetZ)
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp  = char:FindFirstChild("HumanoidRootPart")
+    local ghostPos = ghost and getPosition(ghost)
+    if not hrp or not ghostPos then return end
+    local safeY = math.max(ghostPos.Y + 4, 5)
+    hrp.CFrame = CFrame.new(ghostPos.X + offsetX, safeY, ghostPos.Z + offsetZ)
+end
+
+local function speedCouldMatch(g, spd)
+    if spd < 11.5 then return true end
+    if thayeConfirmed then return g.name == "Thaye" end
+    if spd >= 13.9 and spd <= 14.3 then return g.name == "Thaye" end
+    if spd >= 14.8 and spd <= 15.3 then
+        if g.name == "Duppy" or g.name == "Wendigo" then return true end
+    end
+    return spd >= (g.spd - SPEED_TOL) and spd <= (g.spd + SPEED_TOL)
+end
+
+local function calcCandidates()
+    local speedFiltering = currentSpeedNow >= 11.5
+    local speedSet = {}
+    if speedFiltering then
+        for _, g in ipairs(GHOSTS) do
+            if speedCouldMatch(g, currentSpeedNow) then speedSet[g.name] = true end
+        end
+    end
+    local REAL_EV = {emf=true, motion=true, orbs=true, fingerprints=true, book=true}
+    local evSet = {}
+    for _, g in ipairs(GHOSTS) do
+        local ok = true
+        for ev in pairs(rejectedEv) do
+            if REAL_EV[ev] then
+                for _, gev in ipairs(g.ev) do if gev == ev then ok = false; break end end
+                if not ok then break end
+            end
+        end
+        if ok then
+            for ev in pairs(detectedEv) do
+                if REAL_EV[ev] then
+                    local has = false
+                    for _, gev in ipairs(g.ev) do if gev == ev then has = true; break end end
+                    if not has then ok = false; break end
+                end
+            end
+        end
+        if ok then evSet[g.name] = true end
+    end
+    local result = {}
+    for _, g in ipairs(GHOSTS) do
+        local passes
+        if speedFiltering and anyEvidence then passes = speedSet[g.name] and evSet[g.name]
+        elseif speedFiltering then passes = speedSet[g.name]
+        elseif anyEvidence then passes = evSet[g.name]
+        else passes = true end
+        if passes and detectedTrait then
+            if detectedTrait == "imitator" then
+                local is = false
+                for _, n in ipairs({"Blair","Mimic","Myling","O Tokata","Shade","Wraith"}) do if g.name == n then is = true; break end end
+                passes = is
+            else
+                passes = (g.trait == detectedTrait)
+            end
+        end
+        if passes and g.trait and rejectedTraits[g.trait] then passes = false end
+        if passes and rejectedTraits["imitator"] then
+            for _, n in ipairs({"Blair","Mimic","Myling","O Tokata","Shade","Wraith"}) do if g.name == n then passes = false; break end end
+        end
+        if passes then table.insert(result, g.name) end
+    end
+    if speedFiltering and currentSpeedNow >= 14.8 and currentSpeedNow <= 15.3 then
+        local f = {}; for _, n in ipairs(result) do if n ~= "Preta" then table.insert(f, n) end end; result = f
+    end
+    if speedFiltering and currentSpeedNow > 15.3 and currentSpeedNow <= 15.8 then
+        local f = {}; for _, n in ipairs(result) do if n ~= "Duppy" and n ~= "Wendigo" then table.insert(f, n) end end; result = f
+    end
+    if thayeConfirmed then
+        result = {}
+        for _, g in ipairs(GHOSTS) do
+            if g.name == "Thaye" then
+                local ok = true
+                for ev in pairs(rejectedEv) do for _, gev in ipairs(g.ev) do if gev == ev then ok = false; break end end; if not ok then break end end
+                if ok then table.insert(result, "Thaye") end
+                break
+            end
+        end
+    end
+    return result
+end
+
+local function isPhantomShadeOnly(c)
+    if #c ~= 2 then return false end
+    local h = {}; for _, n in ipairs(c) do h[n] = true end
+    return h["Phantom"] and h["Shade"]
+end
+
+local function selfDestruct()
+    task.wait(1)
+    local closePos = getVanClosePos()
+    if closePos then
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp  = char and char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = CFrame.new(closePos + Vector3.new(2.2, 2, 0.4), closePos)
+            task.wait(0.25)
+            local cam = workspace.CurrentCamera
+            cam.CameraType = Enum.CameraType.Scriptable
+            local camOffset = closePos + Vector3.new(2.8, 1.6, 0.4)
+            cam.CFrame = CFrame.lookAt(camOffset, closePos)
+            task.wait(0.15)
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+            local holdUntil = tick() + 5
+            while tick() < holdUntil do
+                cam.CFrame = CFrame.lookAt(camOffset, closePos)
+                task.wait(0.05)
+            end
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+            cam.CameraType = Enum.CameraType.Custom
+        end
+    end
+    task.wait(1)
+    player:SetAttribute("SpecterLiteRunning", nil)
+    pcall(function() screenGui:Destroy() end)
+end
+
+local function submitGhostInJournal(ghostName)
+    notify("✦  "..ghostName, GAR.purple, 10, "ghost")
+    task.wait(0.5)
+    pressKey(Enum.KeyCode.J)
+    local ghostSel = nil
+    local deadline = tick() + 8
+    while tick() < deadline do
+        local ok, result = pcall(function()
+            return playerGui.Journal.Frame.Frame.Selection.Evidence.Right.GhostSelection
+        end)
+        if ok and result then ghostSel = result; break end
+        task.wait(0.15)
+    end
+    if not ghostSel then
+        pressKey(Enum.KeyCode.J)
+        selfDestruct(); return
+    end
+    if NEEDS_SCROLL_DOWN[ghostName] then
+        local selAbs = ghostSel.AbsolutePosition
+        local selSz  = ghostSel.AbsoluteSize
+        local scrollX = selAbs.X + selSz.X / 2
+        local scrollY = selAbs.Y + selSz.Y / 2
+        for _ = 1, 3 do
+            VirtualInputManager:SendMouseWheelEvent(scrollX, scrollY, false, game)
+            task.wait(0.12)
+        end
+        task.wait(0.25)
+    end
+    local targetFrame = nil
+    for _, child in ipairs(ghostSel:GetChildren()) do
+        if child.Name == ghostName then targetFrame = child; break end
+    end
+    if targetFrame then
+        local posDeadline = tick() + 5
+        local cx, cy
+        while tick() < posDeadline do
+            local abs = targetFrame.AbsolutePosition
+            local sz  = targetFrame.AbsoluteSize
+            if abs.X > 0 and abs.Y > 0 then
+                cx = abs.X + sz.X / 2
+                cy = abs.Y + sz.Y / 2 + START_OFFSET_Y
+                break
+            end
+            task.wait(0.12)
+        end
+        if cx then
+            task.wait(0.4)
+            for _ = 1, 15 do
+                local abs2 = targetFrame.AbsolutePosition
+                local sz2  = targetFrame.AbsoluteSize
+                local guesses = targetFrame:FindFirstChild("Guesses")
+                local votes = 0
+                if guesses then
+                    for _, ch in ipairs(guesses:GetChildren()) do
+                        if not ch:IsA("UIGridLayout") then votes += 1 end
+                    end
+                end
+                if votes == 1 then break end
+                clickAt(abs2.X + sz2.X/2, abs2.Y + sz2.Y/2 + START_OFFSET_Y)
+                task.wait(0.5)
+            end
+        end
+        if NEEDS_SCROLL_DOWN[ghostName] then
+            local selAbs = ghostSel.AbsolutePosition
+            local selSz  = ghostSel.AbsoluteSize
+            local scrollX = selAbs.X + selSz.X / 2
+            local scrollY = selAbs.Y + selSz.Y / 2
+            task.wait(0.1)
+            for _ = 1, 5 do
+                VirtualInputManager:SendMouseWheelEvent(scrollX, scrollY, true, game)
+                task.wait(0.1)
+            end
+        end
+    end
+    pressKey(Enum.KeyCode.J)
+    task.wait(0.3)
+    selfDestruct()
+end
+
+local function announceAndSubmit(ghostName)
+    if identifiedDone then return end
+    identifiedDone = true
+    submitGhostInJournal(ghostName)
+end
+
+local function updateCandidates()
+    if identifiedDone then return end
+    local candidates = calcCandidates()
+    if isPhantomShadeOnly(candidates) and not bookExtendedTimerLaunched then
+        bookExtendedTimerLaunched = true
+    end
+    if #candidates == 0 then
+        local fallback = {}
+        for _, g in ipairs(GHOSTS) do
+            local ok = true
+            for ev in pairs(rejectedEv) do for _, gev in ipairs(g.ev) do if gev == ev then ok = false; break end end; if not ok then break end end
+            if ok then for ev in pairs(detectedEv) do local has = false; for _, gev in ipairs(g.ev) do if gev == ev then has = true; break end end; if not has then ok = false; break end end end
+            if ok and detectedTrait then
+                if detectedTrait == "imitator" then
+                    local is = false; for _, n in ipairs({"Blair","Mimic","Myling","O Tokata","Shade","Wraith"}) do if g.name == n then is = true; break end end; ok = is
+                else ok = (g.trait == detectedTrait) end
+            end
+            if ok and g.trait and rejectedTraits[g.trait] then ok = false end
+            if ok and rejectedTraits["imitator"] then for _, n in ipairs({"Blair","Mimic","Myling","O Tokata","Shade","Wraith"}) do if g.name == n then ok = false; break end end end
+            if ok then table.insert(fallback, g.name) end
+        end
+        if #fallback == 1 then announceAndSubmit(fallback[1]) end
+    elseif #candidates == 1 then
+        announceAndSubmit(candidates[1])
+    end
+end
+
+setTrait = function(traitName)
+    if detectedTrait then return end
+    if rejectedTraits[traitName] then return end
+    detectedTrait = traitName
+    notify("Trait: "..traitName:sub(1,1):upper()..traitName:sub(2), GAR.amber, 7, "trait")
+    updateCandidates()
+    task.spawn(function()
+        task.wait(15)
+        local REAL_EV2 = {emf=true, motion=true, orbs=true, fingerprints=true, book=true}
+        local pool = {}
+        for _, g in ipairs(GHOSTS) do
+            if g.trait == traitName then
+                for _, ev in ipairs(g.ev) do if REAL_EV2[ev] then pool[ev] = true end end
+            end
+        end
+        for _, ev in ipairs({"emf","motion","orbs","fingerprints","book"}) do
+            if not pool[ev] and not detectedEv[ev] and not rejectedEv[ev] then rejectEvidence(ev) end
+        end
+    end)
+end
+
+rejectTrait = function(traitName)
+    if detectedTrait then return end
+    if rejectedTraits[traitName] then return end
+    rejectedTraits[traitName] = true
+    updateCandidates()
+end
+
+confirmEvidence = function(key)
+    if detectedEv[key] then return end
+    detectedEv[key] = true; anyEvidence = true
+    notify(EV_NAMES[key] or key, GAR.green, 5, "evidence")
+    updateCandidates()
+end
+
+rejectEvidence = function(key)
+    if detectedEv[key] then return end
+    rejectedEv[key] = true
+    updateCandidates()
+end
+
+local function launchDetector()
+    notify("⊙ Scanning...", GAR.lens, 4, "system")
+
+    local snpcs = workspace:WaitForChild("ServerNPCs", 30)
+    ghost = snpcs and snpcs:WaitForChild("GLOBAL", 30)
+
+    local npcGlobal = workspace:WaitForChild("NPCs", 20)
+    npcGlobal = npcGlobal and npcGlobal:WaitForChild("GLOBAL", 20)
+    ghostBase = npcGlobal and npcGlobal:WaitForChild("Base", 10)
+
+    local evidenceFolder = workspace.Dynamic.Evidence
+    local fingerprints   = evidenceFolder.Fingerprints
+    local orbs           = evidenceFolder.Orbs
+    local emfs           = evidenceFolder.EMF
+    motions              = evidenceFolder.MotionGrids
+    local equipment      = workspace:WaitForChild("Equipment", 20)
+
+    task.spawn(function()
+        task.wait(1)
+        local van = workspace:WaitForChild("Van", 10)
+        if not van then return end
+        local vanEquip = van:FindFirstChild("Equipment")
+        if not vanEquip then return end
+
+        local book = vanEquip:FindFirstChild("Book")
+        if book then pickupItem(book); waitForDisappear(book, 5); ITEMS_PICKED += 1 end
+        if identifiedDone then return end
+
+        local motionSensor = vanEquip:FindFirstChild("Motion Sensor")
+        if motionSensor then pickupItem(motionSensor); waitForDisappear(motionSensor, 5); ITEMS_PICKED += 1 end
+        if identifiedDone then return end
+
+        task.wait(0.3)
+
+        safeTPNearGhost(3, 3)
+        task.wait(0.2)
+        local cam = workspace.CurrentCamera
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            cam.CameraType = Enum.CameraType.Scriptable
+            cam.CFrame = CFrame.lookAt(cam.CFrame.Position, hrp.Position + Vector3.new(0,-2,0))
+            task.wait(0.1)
+        end
+        pressKey(Enum.KeyCode.One)
+        task.wait(0.3)
+        local vp = workspace.CurrentCamera.ViewportSize
+        VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, true, game, 0)
+        task.wait(0.08)
+        VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, false, game, 0)
+        cam.CameraType = Enum.CameraType.Custom
+        if identifiedDone then return end
+
+        waitForEquipmentItem("Book", 20)
+        if identifiedDone then return end
+
+        safeTPNearGhost(-3, -3)
+        task.wait(0.2)
+        cam = workspace.CurrentCamera
+        hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            cam.CameraType = Enum.CameraType.Scriptable
+            cam.CFrame = CFrame.lookAt(cam.CFrame.Position, hrp.Position + Vector3.new(0,-2,0))
+            task.wait(0.1)
+        end
+        pressKey(Enum.KeyCode.Two)
+        task.wait(0.3)
+        vp = workspace.CurrentCamera.ViewportSize
+        VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, true, game, 0)
+        task.wait(0.08)
+        VirtualInputManager:SendMouseButtonEvent(vp.X/2, vp.Y/2, 0, false, game, 0)
+        cam.CameraType = Enum.CameraType.Custom
+        if identifiedDone then return end
+
+        waitForEquipmentItem("Motion Sensor", 20)
+        if identifiedDone then return end
+        task.wait(3)
+        if identifiedDone then return end
+
+        safeTPNearGhost(3, 3)
+        task.wait(0.2)
+        cam = workspace.CurrentCamera
+        hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            cam.CameraType = Enum.CameraType.Scriptable
+            local ghostPos = ghost and getPosition(ghost)
+            if ghostPos then
+                cam.CFrame = CFrame.lookAt(hrp.Position + Vector3.new(0,1,0), ghostPos)
+            end
+        end
+
+        local tormentorDetected = false
+        local tormentorConn
+        local tormentor = Lighting:FindFirstChild("Tormentor")
+        if tormentor then
+            if tormentor.Enabled then tormentorDetected = true end
+            if not tormentorDetected then
+                tormentorConn = tormentor:GetPropertyChangedSignal("Enabled"):Connect(function()
+                    if tormentor.Enabled then tormentorDetected = true end
+                end)
+            end
+        end
+
+        task.wait(6)
+        if tormentorConn then tormentorConn:Disconnect() end
+        cam.CameraType = Enum.CameraType.Custom
+
+        if tormentorDetected then
+            setTrait("tormentor")
+        else
+            rejectTrait("tormentor")
+        end
+        if identifiedDone then return end
+
+        local van2 = workspace:FindFirstChild("Van")
+        local sp   = van2 and van2:FindFirstChild("Spawn")
+        hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp and sp then
+            local spPos = getPosition(sp)
+            if spPos then hrp.CFrame = CFrame.new(spPos + Vector3.new(0, 3, 0)) end
+        end
+    end)
+
+    emfs.ChildAdded:Connect(function(e)
+        if e.Name == "EMF5" then confirmEvidence("emf") end
+    end)
+    fingerprints.ChildAdded:Connect(function() confirmEvidence("fingerprints") end)
+    orbs.ChildAdded:Connect(function() confirmEvidence("orbs") end)
+
+    task.delay(120, function()
+        if not detectedEv["emf"]          then rejectEvidence("emf") end
+        if not detectedEv["fingerprints"] then rejectEvidence("fingerprints") end
+        if not detectedEv["orbs"]         then rejectEvidence("orbs") end
+    end)
+
+    task.spawn(function()
+        while not identifiedDone do
+            if motions then
+                local yes, no = false, false
+                local sg  = motions:FindFirstChild("SensorGrid")
+                local src = sg and sg:GetChildren() or motions:GetDescendants()
+                for _, m in pairs(src) do
+                    if m:IsA("Part") then
+                        if colorClose(m.Color, COLOR_MOTION_YES) then yes = true; break
+                        elseif colorClose(m.Color, COLOR_TOOTHPASTE) then no = true end
+                    end
+                end
+                if yes then confirmEvidence("motion")
+                elseif no and not detectedEv["motion"] then rejectEvidence("motion") end
+            end
+            task.wait(0.5)
+        end
+    end)
+
+    local function watchBook(book)
+        local function checkPages()
+            if detectedEv["book"] then return end
+            local left  = book:FindFirstChild("LeftPage")
+            local right = book:FindFirstChild("RightPage")
+            if (left and #left:GetChildren()>0) or (right and #right:GetChildren()>0) then confirmEvidence("book") end
+        end
+        checkPages()
+        local function connectPage(page)
+            if not page then return end
+            page.ChildAdded:Connect(function() confirmEvidence("book") end)
+        end
+        connectPage(book:FindFirstChild("LeftPage"))
+        connectPage(book:FindFirstChild("RightPage"))
+        book.ChildAdded:Connect(function(child)
+            if child.Name == "LeftPage" or child.Name == "RightPage" then connectPage(child); checkPages() end
+        end)
+    end
+    if equipment then
+        for _, item in pairs(equipment:GetChildren()) do if item.Name == "Book" then watchBook(item) end end
+        equipment.ChildAdded:Connect(function(item) if item.Name == "Book" then watchBook(item) end end)
+    end
+
+    local bookStartTime = tick()
+    task.delay(140, function()
+        if detectedEv["book"] then return end
+        if isPhantomShadeOnly(calcCandidates()) then
+            task.delay(math.max(180 - (tick()-bookStartTime), 0), function()
+                if not detectedEv["book"] then rejectEvidence("book") end
+            end)
+        else
+            rejectEvidence("book")
+        end
+    end)
+
+    task.spawn(function()
+        local startTime = tick(); local transitions = 0; local lastState = nil; local conn
+        conn = RunService.Heartbeat:Connect(function()
+            if identifiedDone then conn:Disconnect(); return end
+            if detectedTrait or rejectedTraits["flicker"] then conn:Disconnect(); return end
+            if tick() - startTime > 20 then conn:Disconnect(); rejectTrait("flicker"); return end
+            if not ghostBase then return end
+            local t = ghostBase.Transparency
+            local currentState = t <= 0.05 and "visible" or "hidden"
+            if lastState ~= nil and currentState ~= lastState then transitions += 1 end
+            lastState = currentState
+            if transitions >= 3 then conn:Disconnect(); setTrait("flicker") end
+        end)
+    end)
+
+    task.spawn(function()
+        local function checkForTrickster(model)
+            if detectedTrait then return end
+            local main = model:FindFirstChild("Main")
+            if not main then return end
+            if main:FindFirstChildWhichIsA("BodyForce") then setTrait("trickster"); return end
+            main.ChildAdded:Connect(function(child)
+                if detectedTrait then return end
+                if child:IsA("BodyForce") then setTrait("trickster") end
+            end)
+        end
+        if equipment then
+            for _, model in pairs(equipment:GetChildren()) do if model:IsA("Model") then checkForTrickster(model) end end
+            equipment.ChildAdded:Connect(function(child) if detectedTrait then return end; if child:IsA("Model") then checkForTrickster(child) end end)
+        end
+    end)
+
+    task.delay(210, function()
+        if identifiedDone or detectedTrait then return end
+        if not rejectedTraits["trickster"] then rejectedTraits["trickster"] = true; updateCandidates() end
+        if not rejectedTraits["imitator"]  then rejectedTraits["imitator"]  = true; updateCandidates() end
+    end)
+
+    task.spawn(function()
+        while not identifiedDone do
+            if ghost then
+                local speed = ghost:GetAttribute("Speed") or 0
+                if speed >= 11.0 then
+                    if not firstSpeedReading then firstSpeedReading = { speed=speed, time=tick() } end
+                    currentSpeedNow = speed
+                    if not thayeConfirmed and speed >= 13.9 and speed <= 14.3 then
+                        if firstSpeedReading and firstSpeedReading.speed >= 13.5 and firstSpeedReading.speed <= 14.0 then
+                            thayeConfirmed = true
+                        end
+                    end
+                    updateCandidates()
+                end
+            end
+            task.wait(0.3)
+        end
+    end)
+
+    task.spawn(function()
+        local lastPos = nil; local lastT = tick()
+        while not identifiedDone do
+            task.wait(0.2)
+            local cands = calcCandidates()
+            local wraithIn = false
+            for _, n in ipairs(cands) do if n == "Wraith" then wraithIn = true; break end end
+            if not wraithIn then lastPos = nil; continue end
+            local gp = ghost and ghost.PrimaryPart and ghost.PrimaryPart.Position
+            if gp then
+                if lastPos then
+                    if (tick()-lastT) < 0.5 and (gp-lastPos).Magnitude > 15 then
+                        announceAndSubmit("Wraith"); break
+                    end
+                end
+                lastPos = gp; lastT = tick()
+            end
+        end
+    end)
+
+    task.spawn(function()
+        local function mimicIn()
+            for _, n in ipairs(calcCandidates()) do if n == "Mimic" then return true end end; return false
+        end
+        local baseConfirmed = false; local baseReadings = 0
+        while not identifiedDone do
+            task.wait(0.35)
+            if not mimicIn() then baseConfirmed=false; baseReadings=0; continue end
+            if not ghost then continue end
+            local spd = ghost:GetAttribute("Speed") or 0
+            if spd < 11.0 then continue end
+            if not baseConfirmed then
+                if spd >= (12.4-SPEED_TOL) and spd <= (12.4+SPEED_TOL) then
+                    baseReadings += 1
+                    if baseReadings >= 4 then baseConfirmed = true end
+                else baseReadings = 0 end
+            else
+                if spd > (12.4+SPEED_TOL) and spd >= 13.0 then announceAndSubmit("Mimic"); break end
+            end
+        end
+    end)
+
+    local IMITATOR_KEYWORDS = {"something is wrong","we should leave","open door for van","something wrong","should leave"}
+    local function checkMessageForImitator(text)
+        if not text or identifiedDone then return end
+        local lower = text:lower()
+        for _, kw in ipairs(IMITATOR_KEYWORDS) do
+            if lower:find(kw, 1, true) then
+                if detectedTrait == "imitator" or rejectedTraits["imitator"] then return end
+                detectedTrait = "imitator"
+                notify("Trait: Imitator", GAR.amber, 7, "trait")
+                updateCandidates()
+                return
+            end
+        end
+    end
+    local TextChatService = game:GetService("TextChatService")
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        TextChatService.MessageReceived:Connect(function(message)
+            checkMessageForImitator(message.Text or "")
+        end)
+    end
+end
+
+local function buildKeyCard(onSuccess)
+    local keyCard = Instance.new("Frame", screenGui)
+    keyCard.Name = "KeyCard"
+    keyCard.Size = UDim2.new(0, 360, 0, 230)
+    keyCard.Position = UDim2.new(0.5, -180, 0.5, -115)
+    keyCard.BackgroundColor3 = GAR.void
+    keyCard.BorderSizePixel = 0
+    keyCard.ZIndex = 10
+    keyCard.ClipsDescendants = false
+    Instance.new("UICorner", keyCard).CornerRadius = UDim.new(0, 18)
+
+    local kcStroke = Instance.new("UIStroke", keyCard)
+    kcStroke.Color = GAR.ring; kcStroke.Thickness = 1.5; kcStroke.Transparency = 0.3
+
+    local kcRim = Instance.new("Frame", keyCard)
+    kcRim.Size = UDim2.new(1, 0, 0, 4); kcRim.BackgroundColor3 = GAR.ring
+    kcRim.BorderSizePixel = 0; kcRim.ZIndex = 15
+    Instance.new("UICorner", kcRim).CornerRadius = UDim.new(0, 18)
+
+    local kcLogo = Instance.new("TextLabel", keyCard)
+    kcLogo.Size = UDim2.new(0, 32, 0, 32); kcLogo.Position = UDim2.new(0, 16, 0, 14)
+    kcLogo.BackgroundTransparency = 1; kcLogo.Text = "◉"; kcLogo.Font = Enum.Font.GothamBold
+    kcLogo.TextSize = 20; kcLogo.TextColor3 = GAR.ringHot; kcLogo.ZIndex = 16
+
+    local kcTitle = Instance.new("TextLabel", keyCard)
+    kcTitle.Size = UDim2.new(0.9, -16, 0, 22); kcTitle.Position = UDim2.new(0, 46, 0, 16)
+    kcTitle.BackgroundTransparency = 1; kcTitle.Text = "SPECTER DETECTOR"
+    kcTitle.Font = Enum.Font.GothamBold; kcTitle.TextSize = 14; kcTitle.TextColor3 = GAR.ringHot
+    kcTitle.TextXAlignment = Enum.TextXAlignment.Left; kcTitle.ZIndex = 16
+
+    local kcSub = Instance.new("TextLabel", keyCard)
+    kcSub.Size = UDim2.new(0.9, -16, 0, 14); kcSub.Position = UDim2.new(0, 16, 0, 40)
+    kcSub.BackgroundTransparency = 1; kcSub.Text = "⊙ Event Horizon Authentication"
+    kcSub.Font = Enum.Font.Gotham; kcSub.TextSize = 10; kcSub.TextColor3 = GAR.muted
+    kcSub.TextXAlignment = Enum.TextXAlignment.Left; kcSub.ZIndex = 16
+
+    local kcLine = Instance.new("Frame", keyCard)
+    kcLine.Size = UDim2.new(0.9, -16, 0, 1); kcLine.Position = UDim2.new(0, 16, 0, 62)
+    kcLine.BackgroundColor3 = GAR.ringDim; kcLine.BorderSizePixel = 0; kcLine.ZIndex = 16
+
+    local kcFieldLabel = Instance.new("TextLabel", keyCard)
+    kcFieldLabel.Size = UDim2.new(0.9, -16, 0, 12); kcFieldLabel.Position = UDim2.new(0, 16, 0, 70)
+    kcFieldLabel.BackgroundTransparency = 1; kcFieldLabel.Text = "◈  ACCESS KEY"
+    kcFieldLabel.Font = Enum.Font.GothamBold; kcFieldLabel.TextSize = 8
+    kcFieldLabel.TextColor3 = GAR.ring; kcFieldLabel.TextTransparency = 0.2
+    kcFieldLabel.TextXAlignment = Enum.TextXAlignment.Left; kcFieldLabel.ZIndex = 16
+
+    local keyBox = Instance.new("TextBox", keyCard)
+    keyBox.Size = UDim2.new(0.9, -16, 0, 36); keyBox.Position = UDim2.new(0, 16, 0, 84)
+    keyBox.BackgroundColor3 = GAR.deep; keyBox.BorderSizePixel = 0
+    keyBox.Text = ""; keyBox.PlaceholderText = "Paste key here..."
+    keyBox.PlaceholderColor3 = GAR.dim; keyBox.TextColor3 = GAR.white
+    keyBox.Font = Enum.Font.Gotham; keyBox.TextSize = 11; keyBox.ClearTextOnFocus = false; keyBox.ZIndex = 16
+    Instance.new("UICorner", keyBox).CornerRadius = UDim.new(0, 8)
+    local kbPad = Instance.new("UIPadding", keyBox)
+    kbPad.PaddingLeft = UDim.new(0, 12); kbPad.PaddingRight = UDim.new(0, 12)
+    local kbStroke = Instance.new("UIStroke", keyBox)
+    kbStroke.Color = GAR.ring; kbStroke.Thickness = 1; kbStroke.Transparency = 0.5
+
+    local keyStatus = Instance.new("TextLabel", keyCard)
+    keyStatus.Size = UDim2.new(0.9, -16, 0, 14); keyStatus.Position = UDim2.new(0, 16, 0, 126)
+    keyStatus.BackgroundTransparency = 1; keyStatus.Text = ""
+    keyStatus.Font = Enum.Font.Gotham; keyStatus.TextSize = 10
+    keyStatus.TextXAlignment = Enum.TextXAlignment.Left; keyStatus.ZIndex = 16
+
+    local function makeBtn(txt, xPos, yPos, baseColor)
+        local b = Instance.new("TextButton", keyCard)
+        b.Size = UDim2.new(0, 118, 0, 33); b.Position = UDim2.new(0, xPos, 0, yPos)
+        b.BackgroundColor3 = baseColor; b.BorderSizePixel = 0
+        b.Text = txt; b.TextColor3 = GAR.white
+        b.Font = Enum.Font.GothamBold; b.TextSize = 11; b.AutoButtonColor = false; b.ZIndex = 16
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
+        b.MouseEnter:Connect(function() TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = baseColor:Lerp(GAR.ringHot, 0.25)}):Play() end)
+        b.MouseLeave:Connect(function() TweenService:Create(b, TweenInfo.new(0.12), {BackgroundColor3 = baseColor}):Play() end)
+        return b
+    end
+
+    local getLinkBtn  = makeBtn("⊕  Get Key", 16,  155, Color3.fromRGB(55, 28, 0))
+    local checkKeyBtn = makeBtn("◎  Verify",  148, 155, Color3.fromRGB(70, 35, 0))
+
+    local kcFooter = Instance.new("TextLabel", keyCard)
+    kcFooter.Size = UDim2.new(0.9, -16, 0, 12); kcFooter.Position = UDim2.new(0, 16, 1, -16)
+    kcFooter.BackgroundTransparency = 1; kcFooter.Text = "M87 · NGC 1277 · Sgr A*  ·  ψ = ∞"
+    kcFooter.Font = Enum.Font.Gotham; kcFooter.TextSize = 8; kcFooter.TextColor3 = GAR.ringDim
+    kcFooter.TextTransparency = 0.3; kcFooter.TextXAlignment = Enum.TextXAlignment.Left; kcFooter.ZIndex = 16
+
+    getLinkBtn.MouseButton1Click:Connect(function()
+        setclipboard(GET_KEY_URL)
+        local orig = getLinkBtn.Text
+        getLinkBtn.Text = "✦ Copied!"; getLinkBtn.TextColor3 = GAR.green
+        task.delay(2, function() getLinkBtn.Text = orig; getLinkBtn.TextColor3 = GAR.white end)
+    end)
+
+    checkKeyBtn.MouseButton1Click:Connect(function()
+        local entered = keyBox.Text:gsub("%s+", "")
+        if entered == VALID_KEY then
+            keyStatus.TextColor3 = GAR.green
+            keyStatus.Text = "✦ Valid key — access granted."
+            storeKey()
+            task.wait(1)
+            TweenService:Create(keyCard, TweenInfo.new(0.35), {BackgroundTransparency = 1}):Play()
+            for _, d in ipairs(keyCard:GetDescendants()) do
+                if d:IsA("GuiObject") then
+                    pcall(function() TweenService:Create(d, TweenInfo.new(0.35), {BackgroundTransparency = 1}):Play() end)
+                end
+            end
+            task.delay(0.38, function()
+                keyCard.Visible = false
+                onSuccess()
+            end)
+        else
+            keyStatus.TextColor3 = GAR.red
+            keyStatus.Text = "✦ Invalid key — access denied."
+            TweenService:Create(keyBox, TweenInfo.new(0.08, Enum.EasingStyle.Bounce), {BackgroundColor3 = Color3.fromRGB(40, 10, 0)}):Play()
+            task.delay(0.4, function() TweenService:Create(keyBox, TweenInfo.new(0.2), {BackgroundColor3 = GAR.deep}):Play() end)
+        end
+    end)
+end
+
+local function start()
+    openVanRobust()
+    task.wait(1)
+    launchDetector()
+end
+
+task.delay(1, function()
+    if isKeyStored() then
+        start()
+    else
+        buildKeyCard(start)
+    end
+end)
